@@ -31,3 +31,24 @@ build/
 
 ### VS Code ###
 .vscode/
+# Log files
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Application properties (本番環境用の秘密情報)
+application-prod.properties
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~.nib
+
+# Eclipse additional
+.metadata
+*.launch
+bin/

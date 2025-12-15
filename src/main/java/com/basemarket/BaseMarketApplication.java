@@ -1,3 +1,4 @@
+//# アプリケーションのエントリーポイント（起動クラス）
 package com.basemarket;
 
 import org.springframework.boot.SpringApplication;
