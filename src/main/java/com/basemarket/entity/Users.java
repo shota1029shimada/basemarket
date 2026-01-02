@@ -1,7 +1,7 @@
 //ユーザー情報を扱うためのJavaクラス
+//users テーブル自動生成
 package com.basemarket.entity;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -9,56 +9,70 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Entity //データベースのレコードに対応するオブジェクト
-@Table(name = "users") //テーブルを指定
-@Data //Lombokが自動的にgetter/setterを生成
-@NoArgsConstructor //
-@AllArgsConstructor
+/**
+ * users テーブルに対応する Entity クラス
+ * 「DBの1行 = このクラスの1インスタンス」
+ */
+@Entity // ← このクラスがDBのテーブルと紐づくことを示す
+@Table(name = "users") // ← テーブル名を明示
+@Getter
+@Setter // ← Lombok：getter/setterを自動生成
+@NoArgsConstructor // ← 引数なしコンストラクタ生成（JPA必須）
+@AllArgsConstructor // ← 全引数コンストラクタ生成
+@Builder // ← Users.builder() でオブジェクト生成可能
 public class Users {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY) //データベース側（PostgreSQLなど）で自動採番
-	@Column(name = "users_id")
-	private Long usersId; // ユーザーID
+	@Id // ← 主キー
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	// ↑ DB側でIDを自動採番（PostgreSQLのserial相当）
+	private Long id;
 
-	@Column(name = "username", unique = true, nullable = false, length = 50)
-	private String username;//ユーザー名
+	@Column(nullable = false) // NOT NULL制約
+	private String username;
 
-	@Column(name = "email", unique = true, nullable = false, length = 100)
+	@Column(nullable = false, unique = true) //unique=true：メールアドレス重複不可
 	private String email;
 
-	@Column(name = "password_hash", nullable = false, length = 255)
+	@Column(nullable = false) // パスワード（※後で必ずハッシュ化）
 	private String passwordHash;
 
-	@Column(name = "profile_image_url", length = 500)
-	private String profileImageUrl;
+	@Column(nullable = false) // ROLE_USER / ROLE_ADMIN など
+	private String role;
 
-	@Column(name = "bio", columnDefinition = "TEXT")
-	private String bio;
+	@Column(nullable = false)
+	private boolean isBanned = false;
 
-	@Column(name = "rating", precision = 3, scale = 2)
-	private BigDecimal rating = BigDecimal.ZERO;
-
-	@Column(name = "is_banned", nullable = false)
-	private Boolean isBanned = false;
-
-	@Column(name = "role", nullable = false, length = 20)
-	private String role = "USER";
-
-	@CreationTimestamp
-	@Column(name = "created_at", nullable = false, updatable = false)
+	@Column(name = "created_at") // 登録日時
 	private LocalDateTime createdAt;
 
-	@UpdateTimestamp
-	@Column(name = "updated_at", nullable = false)
+	@Column(name = "updated_at") // 更新日時
 	private LocalDateTime updatedAt;
+
+	/**
+	 * @PrePersist：保存前フック
+	 * Entityが保存される直前に自動実行される
+	 */
+	@PrePersist
+	public void onCreate() {
+		createdAt = LocalDateTime.now();
+		updatedAt = LocalDateTime.now();
+	}
+
+	/**
+	 * Entityが更新される直前に自動実行される
+	 */
+	@PreUpdate
+	public void onUpdate() {
+		updatedAt = LocalDateTime.now();
+	}
 }

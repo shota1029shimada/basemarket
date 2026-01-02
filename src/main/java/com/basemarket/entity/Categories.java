@@ -1,40 +1,40 @@
-//カテゴリー情報を扱うためのjavaクラス
+//categoriesテーブルに対応・野球用品のカテゴリ情報 
 package com.basemarket.entity;
 
-import java.time.LocalDateTime;
+import java.util.List;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.CreationTimestamp;
-
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "categories")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Categories {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "categories_id")
-	private Long categoriesId;//カテゴリーID
+	private Long id;
 
-	@Column(name = "category_name", unique = true, nullable = false, length = 50)
-	private String categoryName;//カテゴリー名
+	// カテゴリ名
+	@Column(nullable = false, unique = true)
+	private String name;
 
-	@Column(name = "display_order")
-	private Integer displayOrder;//表示順
-
-	@CreationTimestamp
-	@Column(name = "created_at", nullable = false, updatable = false)
-	private LocalDateTime createdAt;//登録日時
+	// このカテゴリに属する商品
+	@OneToMany(mappedBy = "category")
+	private List<Items> items;
 }

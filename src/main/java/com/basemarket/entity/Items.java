@@ -1,68 +1,91 @@
+//Itemsテーブルに対応・商品情報（タイトル、価格、説明等）
 package com.basemarket.entity;
 
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "items")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Items {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "items_id")
-	private Long itemsId;
+	private Long id;
 
-	@Column(name = "sellers_id", nullable = false)
-	private Long sellersId;
+	// 出品者
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "seller_id", nullable = false)
+	private Users seller;
 
-	@Column(name = "categories_id", nullable = false)
-	private Long categoriesId;
+	// カテゴリ
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "categories_id", nullable = false)
+	private Categories category;
 
-	@Column(name = "title", nullable = false, length = 100)
+	@Column(nullable = false, length = 100)
 	private String title;
 
-	@Column(name = "description", nullable = false, columnDefinition = "TEXT")
+	@Column(nullable = false, columnDefinition = "TEXT")
 	private String description;
 
-	@Column(name = "price", nullable = false)
+	@Column(nullable = false)
 	private Integer price;
 
-	@Column(name = "condition", nullable = false, length = 20)
+	// 商品状態（新品・中古など）
+	@Column(nullable = false, length = 20)
 	private String condition;
 
-	@Column(name = "status", nullable = false, length = 20)
-	private String status = "AVAILABLE";
+	// 出品状態
+	@Column(nullable = false, length = 20)
+	private String status; // AVAILABLE / SOLD / DELETED
 
-	@Column(name = "view_count", nullable = false)
-	private Integer viewCount = 0;
+	@Column(name = "views_count", nullable = false)
+	private Integer viewsCount = 0;
 
-	@Column(name = "like_count", nullable = false)
-	private Integer likeCount = 0;
+	@Column(name = "likes_count", nullable = false)
+	private Integer likesCount = 0;
 
-	@CreationTimestamp
-	@Column(name = "created_at", nullable = false, updatable = false)
+	@Column(name = "created_at", nullable = false)
 	private LocalDateTime createdAt;
 
-	@UpdateTimestamp
 	@Column(name = "updated_at", nullable = false)
 	private LocalDateTime updatedAt;
 
 	@Column(name = "sold_at")
 	private LocalDateTime soldAt;
+
+	@PrePersist
+	public void onCreate() {
+		createdAt = LocalDateTime.now();
+		updatedAt = LocalDateTime.now();
+		status = "AVAILABLE";
+	}
+
+	@PreUpdate
+	public void onUpdate() {
+		updatedAt = LocalDateTime.now();
+	}
 }
