@@ -1,13 +1,11 @@
 //JWTユーティリティ・トークン生成、検証、ユーザー情報抽出
 //JWTを扱うためのユーティリティクラス
 package com.basemarket.security;
-
+import org.springframework.beans.factory.annotation.Value;
+import java.util.Date;
 import java.nio.charset.StandardCharsets;
-
 import javax.crypto.SecretKey;
-
 import jakarta.annotation.PostConstruct;
-
 import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.Claims;
@@ -17,10 +15,8 @@ import io.jsonwebtoken.security.Keys;
 @Component // Spring管理Bean（どこからでもDI可能）
 public class JwtUtil {
 
-	/**
-	 * application.properties から秘密鍵を取得
-	 * ※ 必ず十分に長いランダム文字列にすること（32文字以上推奨）
-	 */
+	// application.properties から秘密鍵を取得
+	// 必ず十分に長いランダム文字列にすること（32文字以上推奨）
 	@Value("${jwt.secret}")
 	private String secret;
 
@@ -49,12 +45,9 @@ public class JwtUtil {
 				secret.getBytes(StandardCharsets.UTF_8));
 	}
 
-	/**
-	 * JWTトークンを生成する
-	 *
-	 * @param username ログインユーザーの識別子（emailなど）
-	 * @return JWTトークン文字列
-	 */
+	// JWTトークンを生成する
+	 // @param username ログインユーザーの識別子（emailなど）
+	 // @return JWTトークン文字列
 	public String generateToken(String username) {
 
 		Date now = new Date();

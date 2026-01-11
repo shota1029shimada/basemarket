@@ -62,9 +62,13 @@ public class Items {
 	@Column(nullable = false, length = 20)
 	private String status; // AVAILABLE / SOLD / DELETED
 
+	//閲覧数
+	@Builder.Default //likesCount = null を避けるため
 	@Column(name = "views_count", nullable = false)
 	private Integer viewsCount = 0;
 
+	//いいね数
+	@Builder.Default
 	@Column(name = "likes_count", nullable = false)
 	private Integer likesCount = 0;
 

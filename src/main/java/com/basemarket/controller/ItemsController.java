@@ -3,85 +3,68 @@ package com.basemarket.controller;
 
 import java.util.List;
 
-import org.springframework.ui.Model;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.basemarket.dto.request.ItemsCreateRequest;
 import com.basemarket.entity.Items;
 import com.basemarket.service.ItemsService;
 
 import lombok.RequiredArgsConstructor;
 
-@RestController //HTML を返す Controller（REST ではない）
+@RestController
 @RequestMapping("/items")
 @RequiredArgsConstructor
 public class ItemsController {
 
-	// Service 層を注入
 	private final ItemsService itemsService;
 
+	@PostMapping
+	public Items createItem(
+			@RequestBody ItemsCreateRequest request) {
+
+		return itemsService.createItem(request);
+	}
+
+	// 商品一覧（新着順）
+	//GET /items
 	@GetMapping
-	public String listItems(Model model) {
-
-		// 商品一覧取得
-		List<Items> items = itemsService.getLatestItems();
-
-		// View に渡す
-		model.addAttribute("items", items);
-
-		// templates/items/list.html を表示
-		return "items/list";
+	public ResponseEntity<List<Items>> getItems() {
+		return ResponseEntity.ok(itemsService.getLatestItems());
 	}
 
 	/**
-	 * 商品詳細表示（閲覧数 +1）
-	 * URL: /items/{id}
+	 * 商品詳細（閲覧数 +1）
+	 * GET /items/{id}
 	 */
 	@GetMapping("/{id}")
-	public String itemDetail(@PathVariable Long id, Model model) {
-
-		// 商品詳細取得（＋閲覧数UP）
-		Items item = itemsService.getItemDetail(id);
-
-		model.addAttribute("item", item);
-
-		// templates/items/detail.html
-		return "items/detail";
+	public ResponseEntity<Items> getItem(@PathVariable Long id) {
+		return ResponseEntity.ok(itemsService.getItemDetail(id));
 	}
 
-	/**
-	 * カテゴリ別商品一覧
-	 * URL: /items/category/{categoryId}
-	 */
+	//カテゴリ別商品一覧
+	//GET /items/category/{categoryId}
 	@GetMapping("/category/{categoryId}")
-	public String itemsByCategory(
-			@PathVariable Long categoryId,
-			Model model) {
+	public ResponseEntity<List<Items>> getItemsByCategory(
+			@PathVariable Long categoryId) {
 
-		List<Items> items = itemsService.getItemsByCategory(categoryId);
-
-		model.addAttribute("items", items);
-
-		return "items/list";
+		return ResponseEntity.ok(
+				itemsService.getItemsByCategory(categoryId));
 	}
 
-	/**
-	 * 商品検索
-	 * URL: /items/search?keyword=xxx
-	 */
+	// 商品検索
+	//GET /items/search?keyword=xxx
 	@GetMapping("/search")
-	public String searchItems(
-			@RequestParam String keyword,
-			Model model) {
+	public ResponseEntity<List<Items>> searchItems(
+			@RequestParam String keyword) {
 
-		List<Items> items = itemsService.searchItems(keyword);
-
-		model.addAttribute("items", items);
-		model.addAttribute("keyword", keyword);
-
-		return "items/list";
+		return ResponseEntity.ok(
+				itemsService.searchItems(keyword));
 	}
 }

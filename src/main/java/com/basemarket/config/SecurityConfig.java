@@ -8,77 +8,50 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-
-import com.basemarket.security.JwtAuthenticationFilter;
-
-import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
 public class SecurityConfig {
 
-	// JWTを検証する自作フィルター
-	private final JwtAuthenticationFilter jwtAuthenticationFilter;
-
 	/**
-	 * 🔐 セキュリティ全体の設定
+	 * 認可ルール定義
 	 */
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
 		http
-				// CSRF対策を無効化（JWTを使うため）
+				// CSRF 無効（API 開発中は必須）
 				.csrf(csrf -> csrf.disable())
+				// フォームログイン無効
+				.formLogin(form -> form.disable())
 
-				// セッションを使わない（JWTなので stateless）
-				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+				// Basic 認証無効
+				.httpBasic(AbstractHttpConfigurer::disable)
 
-				// URLごとのアクセス制御
+				// 認可設定
 				.authorizeHttpRequests(auth -> auth
-						// 認証不要
-						.requestMatchers(
-								"/auth/login",
-								"/auth/register",
-								"/items",
-								"/items/**")
-						.permitAll()
-
-						// 管理者のみ
-						.requestMatchers("/admin/**").hasRole("ADMIN")
-
-						// それ以外はログイン必須
-						.anyRequest().authenticated())
-
-				// JWTフィルターを Spring Security に組み込む
-				.addFilterBefore(
-						jwtAuthenticationFilter,
-						UsernamePasswordAuthenticationFilter.class);
+						.anyRequest().permitAll());
 
 		return http.build();
 	}
 
 	/**
-	 * 🔑 パスワード暗号化（BCrypt）
+	 * AuthenticationManager を Spring に登録
 	 */
 	@Bean
-	public PasswordEncoder passwordEncoder() {
-		// passwordHash を安全に保存するため
-		return new BCryptPasswordEncoder();
+	AuthenticationManager authenticationManager(
+			AuthenticationConfiguration config) throws Exception {
+		return config.getAuthenticationManager();
 	}
 
 	/**
-	 * 🔐 AuthenticationManager
-	 * ログイン処理で使用される
+	 * パスワードエンコーダ
 	 */
 	@Bean
-	public AuthenticationManager authenticationManager(
-			AuthenticationConfiguration config) throws Exception {
-		return config.getAuthenticationManager();
+	PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
 	}
 }
