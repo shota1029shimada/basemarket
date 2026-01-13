@@ -1,12 +1,14 @@
 //JWTフィルター。リクエストごとにトークン検証
 package com.basemarket.security;
 
+import java.io.IOException;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import jakarta.servlet.http.Cookie;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -58,9 +60,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			}
 		}
 
-		/**
-		 * トークンが存在し、まだ認証されていない場合のみ処理
-		 */
+		//トークンが存在し、まだ認証されていない場合のみ処理
+		//↓ログインしているユーザー情報
 		if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
 			// トークンが有効か検証

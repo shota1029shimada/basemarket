@@ -12,18 +12,12 @@ import com.basemarket.entity.Items;
 @Repository
 public interface ItemsRepository extends JpaRepository<Items, Long> {
 
-	/**
-	 * 商品一覧（新着順）
-	 */
+	//商品一覧（新着順）
 	List<Items> findAllByOrderByCreatedAtDesc();
 
-	/**
-	 * カテゴリIDで商品検索
-	 */
+	//カテゴリIDで商品検索
 	List<Items> findByCategoryIdOrderByCreatedAtDesc(Long categoryId);
 
-	/**
-	 * タイトル部分一致検索
-	 */
+	// タイトル部分一致検索
 	List<Items> findByTitleContainingOrderByCreatedAtDesc(String keyword);
 }
