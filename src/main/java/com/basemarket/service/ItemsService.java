@@ -6,7 +6,7 @@ import java.util.List;
 
 import jakarta.transaction.Transactional;
 
-import org.apache.catalina.security.SecurityUtil;
+//import org.apache.catalina.security.SecurityUtil;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +20,7 @@ import com.basemarket.exception.UnauthorizedException;
 import com.basemarket.repository.CategoriesRepository;
 import com.basemarket.repository.ItemsRepository;
 import com.basemarket.repository.UsersRepository;
+import com.basemarket.security.SecurityUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -54,7 +55,7 @@ public class ItemsService {
 	}
 
 	// 商品詳細取得（閲覧数 +1）
-	public Items getItemDetail(Long itemId) {
+	public ItemResponse getItemDetail(Long itemId) {
 
 		Items item = itemsRepository.findById(itemId)
 				.orElseThrow(() -> new ResourceNotFoundException("商品が存在しません"));
@@ -93,51 +94,49 @@ public class ItemsService {
 			ItemsUpdateRequest request,
 			Authentication authentication) {
 
-		//　ログインユーザー取得
+		// ① 商品存在チェック
+		Items item = itemsRepository.findById(itemId)
+				.orElseThrow(() -> new ResourceNotFoundException("商品が存在しません"));
+
+		// ② ログインユーザー取得
 		Users loginUser = (Users) authentication.getPrincipal();
 
-		//  商品存在チェック
-		Items item = itemsRepository.findById(itemId)
-				.orElseThrow(() -> new RuntimeException("商品が存在しません"));
-
-		// 出品者本人チェック
+		// ③ 出品者本人チェック
 		if (!item.getSeller().getId().equals(loginUser.getId())) {
-			throw new UnauthorizedException("この商品を編集する権限がありません");
+			throw new UnauthorizedException("出品者本人のみ編集可能です");
 		}
 
-		// カテゴリ存在チェック
+		// ④ カテゴリ存在チェック
 		Categories category = categoriesRepository.findById(request.getCategoryId())
 				.orElseThrow(() -> new ResourceNotFoundException("カテゴリが存在しません"));
 
-		//  編集可能な項目のみ更新
+		// ⑤ 更新処理
 		item.setTitle(request.getTitle());
 		item.setDescription(request.getDescription());
 		item.setPrice(request.getPrice());
 		item.setCondition(request.getCondition());
 		item.setCategory(category);
 
-		// ⑤ 保存（@Transactional によりUPDATE）
+		// save() 不要（@Transactional）
 		return item;
 	}
 
 	// 商品削除（出品者本人のみ）
 	public void deleteItem(Long itemId, Authentication authentication) {
 
-		//  商品存在チェック
+		// 商品存在チェック
 		Items item = itemsRepository.findById(itemId)
 				.orElseThrow(() -> new ResourceNotFoundException("商品が存在しません"));
 
-		// ログインユーザー取得
-		String email = authentication.getName();
-		Users loginUser = usersRepository.findByEmail(email)
-				.orElseThrow(() -> new ResourceNotFoundException("ユーザーが存在しません"));
+		// ログインユーザー取得（JWT → email → DB）
+		Users loginUser = securityUtil.getLoginUser();
 
 		// 出品者本人チェック
 		if (!item.getSeller().getId().equals(loginUser.getId())) {
 			throw new UnauthorizedException("この商品を削除する権限がありません");
 		}
 
-		// 削除実行
+		// 削除
 		itemsRepository.delete(item);
 	}
 }

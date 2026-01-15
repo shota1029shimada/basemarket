@@ -1,6 +1,6 @@
-// # ユーザー認証情報の取得
+//# ユーザー認証情報の取得
 //# Spring Securityとの連携
-package com.basemarket.service;
+package com.basemarket.security;
 
 import java.util.List;
 
@@ -9,6 +9,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import com.basemarket.entity.Users;
@@ -19,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 //Spring Security がログイン時に呼び出すクラス
 @Service // Spring に管理される Service クラス
 @RequiredArgsConstructor // ← Lombok：finalなフィールドのコンストラクタを自動生成
+@Component
 public class CustomUserDetailsService implements UserDetailsService {
 
 	// UsersテーブルへアクセスするRepository
@@ -33,20 +35,20 @@ public class CustomUserDetailsService implements UserDetailsService {
 	public UserDetails loadUserByUsername(String email)
 			throws UsernameNotFoundException {
 
-		// ① emailを使ってDBからユーザーを検索
+		//emailを使ってDBからユーザーを検索
 		Users user = usersRepository.findByEmail(email)
 				.orElseThrow(() -> new UsernameNotFoundException("ユーザーが見つかりません: " + email));
 
-		// ② BANされているユーザーはログイン不可
+		//BANされているユーザーはログイン不可
 		if (user.isBanned()) {
 			throw new UsernameNotFoundException("このユーザーはBANされています");
 		}
 
-		// ③ ユーザーの権限を作成
+		//ユーザーの権限を作成
 		// Spring Securityでは「ROLE_XXX」という形式が必須
 		List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole()));
 
-		// ④ Spring Securityが使うUserDetailsを生成して返却
+		//Spring Securityが使うUserDetailsを生成して返却
 		return new User(
 				user.getEmail(), // ユーザー名（ログインID）
 				user.getPasswordHash(), // ハッシュ化されたパスワード

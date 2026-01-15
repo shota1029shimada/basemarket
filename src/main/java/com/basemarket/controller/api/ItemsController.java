@@ -1,5 +1,5 @@
 //商品API・商品一覧・商品詳細・商品出品・商品編集・商品削除
-package com.basemarket.controller;
+package com.basemarket.controller.api;
 
 import java.util.List;
 
@@ -19,56 +19,47 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.basemarket.dto.request.ItemsCreateRequest;
 import com.basemarket.dto.request.ItemsUpdateRequest;
+import com.basemarket.dto.response.ItemResponse;
 import com.basemarket.entity.Items;
 import com.basemarket.service.ItemsService;
 
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/items")
+@RequestMapping("/api/items") // ← API専用に変更
 @RequiredArgsConstructor
 public class ItemsController {
 
 	private final ItemsService itemsService;
 
+	// 商品出品（ログイン必須）
+	//POST /api/items
 	@PostMapping
-	//Items 登録
-	public Items createItem(
-			@RequestBody @Valid ItemsCreateRequest request) {
+	public ResponseEntity<ItemResponse> createItem(
+			@RequestBody @Valid ItemsCreateRequest request,
+			Authentication authentication) {
 
-		return itemsService.createItem(request);
+		ItemResponse response = itemsService.createItem(request, authentication);
+
+		return ResponseEntity.ok(response);
 	}
 
 	// 商品一覧（新着順）
-	//GET /items
+	//GET /api/items
 	@GetMapping
 	public ResponseEntity<List<Items>> getItems() {
 		return ResponseEntity.ok(itemsService.getLatestItems());
 	}
 
-	/**
-	 * 商品詳細（閲覧数 +1）
-	 * GET /items/{id}
-	 */
+	// 商品詳細（閲覧数 +1）
+	// GET /api/items/{id}
 	@GetMapping("/{id}")
 	public ResponseEntity<Items> getItem(@PathVariable Long id) {
 		return ResponseEntity.ok(itemsService.getItemDetail(id));
 	}
 
-	//商品編集（出品者本人のみ）
-	//PUT /items/{id}
-	@PutMapping("/{id}")
-	public ResponseEntity<Items> updateItem(
-			@PathVariable Long id,
-			@RequestBody @Valid ItemsUpdateRequest request,
-			Authentication authentication) {
-
-		Items updatedItem = itemsService.updateItem(id, request, authentication);
-		return ResponseEntity.ok(updatedItem);
-	}
-
-	//カテゴリ別商品一覧
-	//GET /items/category/{categoryId}
+	// カテゴリ別商品一覧
+	// GET /api/items/category/{categoryId}
 	@GetMapping("/category/{categoryId}")
 	public ResponseEntity<List<Items>> getItemsByCategory(
 			@PathVariable Long categoryId) {
@@ -78,7 +69,7 @@ public class ItemsController {
 	}
 
 	// 商品検索
-	//GET /items/search?keyword=xxx
+	// GET /api/items/search?keyword=xxx
 	@GetMapping("/search")
 	public ResponseEntity<List<Items>> searchItems(
 			@RequestParam String keyword) {
@@ -87,15 +78,28 @@ public class ItemsController {
 				itemsService.searchItems(keyword));
 	}
 
-	//商品削除（出品者本人のみ）
-	//DELETE /items/{id}
+	// 商品編集（出品者本人のみ）
+	// PUT /api/items/{id}
+	@PutMapping("/{id}")
+	public ResponseEntity<Items> updateItem(
+			@PathVariable Long id,
+			@RequestBody @Valid ItemsUpdateRequest request,
+			Authentication authentication) {
+
+		return ResponseEntity.ok(
+				itemsService.updateItem(id, request, authentication));
+	}
+
+	/**
+	 * 商品削除（出品者本人のみ）
+	 * DELETE /api/items/{id}
+	 */
 	@DeleteMapping("/{id}")
 	public ResponseEntity<Void> deleteItem(
 			@PathVariable Long id,
 			Authentication authentication) {
 
 		itemsService.deleteItem(id, authentication);
-
 		return ResponseEntity.noContent().build();
 	}
 }
