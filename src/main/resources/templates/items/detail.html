@@ -1,10 +1,62 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta charset="UTF-8">
-<title>Insert title here</title>
+    <meta charset="UTF-8">
+    <title>商品詳細</title>
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
 </head>
 <body>
+
+<h1>商品詳細</h1>
+
+<div>
+    <h2 th:text="${item.title}">商品名</h2>
+</div>
+
+<div>
+    <p>
+        <strong>価格：</strong>
+        <span th:text="${item.price}">0</span> 円
+    </p>
+</div>
+
+<div>
+    <p>
+        <strong>カテゴリ：</strong>
+        <span th:text="${item.categoryName}">カテゴリ</span>
+    </p>
+</div>
+
+<div>
+    <p>
+        <strong>商品状態：</strong>
+        <span th:text="${item.condition}">状態</span>
+    </p>
+</div>
+
+<div>
+    <p>
+        <strong>説明：</strong><br>
+        <span th:text="${item.description}">商品説明</span>
+    </p>
+</div>
+
+<hr>
+
+<!-- 出品者本人のみ表示 -->
+<div th:if="${isSeller}">
+    <a th:href="@{/items/{id}/edit(id=${item.id})}">
+        編集する
+    </a>
+    |
+    <a th:href="@{/items/{id}/delete(id=${item.id})}">
+        削除する
+    </a>
+</div>
+
+<hr>
+
+<a th:href="@{/items}">一覧へ戻る</a>
 
 </body>
 </html>

@@ -1,4 +1,3 @@
-//item_imagesテーブルに対応・ 商品の画像URL
 package com.basemarket.entity;
 
 import java.time.LocalDateTime;
@@ -13,7 +12,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,31 +20,35 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "item_images", uniqueConstraints = {
-		@UniqueConstraint(columnNames = { "items_id", "display_order" })
-})
+@Table(name = "chat_messages")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ItemImages {
+public class ChatMessages {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "images_id")
 	private Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "items_id", nullable = false)
 	private Items item;
 
-	@Column(name = "images_url", nullable = false, length = 500)
-	private String imageUrl;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "sender_id", nullable = false)
+	private Users sender;
 
-	// 何枚目か（1,2,3...）
-	@Column(name = "display_order", nullable = false)
-	private Integer displayOrder;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "receiver_id", nullable = false)
+	private Users receiver;
+
+	@Column(name = "message_text", nullable = false, columnDefinition = "TEXT")
+	private String messageText;
+
+	@Column(name = "is_read", nullable = false)
+	private boolean isRead = false;
 
 	@Column(name = "created_at", nullable = false)
 	private LocalDateTime createdAt;

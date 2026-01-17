@@ -1,10 +1,34 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta charset="UTF-8">
-<title>Insert title here</title>
+    <meta charset="UTF-8">
+    <title>商品一覧</title>
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
 </head>
 <body>
+
+<h1>商品一覧</h1>
+
+<!-- 商品が1件もない場合 -->
+<div th:if="${#lists.isEmpty(items)}">
+    <p>現在、商品はありません。</p>
+</div>
+
+<!-- 商品一覧 -->
+<ul th:if="${!#lists.isEmpty(items)}">
+    <li th:each="item : ${items}">
+        <a th:href="@{/items/{id}(id=${item.id})}">
+            <span th:text="${item.title}">商品名</span>
+        </a>
+        /
+        <span th:text="${item.price}">価格</span> 円
+    </li>
+</ul>
+
+<hr>
+
+<!-- 出品画面へのリンク -->
+<a th:href="@{/items/new}">商品を出品する</a>
 
 </body>
 </html>

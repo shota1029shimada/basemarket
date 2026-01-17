@@ -1,4 +1,3 @@
-//item_imagesテーブルに対応・ 商品の画像URL
 package com.basemarket.entity;
 
 import java.time.LocalDateTime;
@@ -22,31 +21,35 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "item_images", uniqueConstraints = {
-		@UniqueConstraint(columnNames = { "items_id", "display_order" })
-})
+@Table(name = "reviews", uniqueConstraints = @UniqueConstraint(columnNames = { "order_id", "reviewer_id" }))
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ItemImages {
+public class Reviews {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "images_id")
 	private Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "items_id", nullable = false)
-	private Items item;
+	@JoinColumn(name = "order_id", nullable = false)
+	private Orders order;
 
-	@Column(name = "images_url", nullable = false, length = 500)
-	private String imageUrl;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "reviewer_id", nullable = false)
+	private Users reviewer;
 
-	// 何枚目か（1,2,3...）
-	@Column(name = "display_order", nullable = false)
-	private Integer displayOrder;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "reviewee_id", nullable = false)
+	private Users reviewee;
+
+	@Column(nullable = false)
+	private Integer rating;
+
+	@Column(columnDefinition = "TEXT")
+	private String comment;
 
 	@Column(name = "created_at", nullable = false)
 	private LocalDateTime createdAt;

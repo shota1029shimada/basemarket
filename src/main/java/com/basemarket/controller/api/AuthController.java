@@ -1,5 +1,5 @@
 // 認証（ログイン）専用コントローラー
-package com.basemarket.controller;
+package com.basemarket.controller.api;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -46,7 +46,7 @@ public class AuthController {
 	// ログイン処理
 	@PostMapping("/login")
 	public ResponseEntity<LoginResponse> login(
-			@RequestBody LoginRequest request,
+			@Valid @RequestBody LoginRequest request,
 			HttpServletResponse response) {
 
 		// email + password を Security に渡す
@@ -64,9 +64,11 @@ public class AuthController {
 		String jwt = jwtUtil.generateToken(authentication.getName());
 
 		// JWTを Cookie に保存
-		Cookie cookie = new Cookie("JWT_TOKEN", jwt);
+		Cookie cookie = new Cookie("JWT", jwt);
 		cookie.setHttpOnly(true); // JSからアクセス不可
-		cookie.setSecure(false); // 本番は true
+		//cookie.setSecure(false); // 本番は true
+		@Value("${app.cookie.secure}")
+		private boolean secure;
 		cookie.setPath("/");
 		cookie.setMaxAge(24 * 60 * 60);
 
@@ -80,7 +82,7 @@ public class AuthController {
 	public ResponseEntity<Void> logout(HttpServletResponse response) {
 
 		// Cookie削除
-		Cookie cookie = new Cookie("JWT_TOKEN", null);
+		Cookie cookie = new Cookie("JWT", null);
 		cookie.setHttpOnly(true);
 		cookie.setSecure(false);
 		cookie.setPath("/");

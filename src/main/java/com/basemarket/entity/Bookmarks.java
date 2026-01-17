@@ -1,4 +1,3 @@
-//item_imagesテーブルに対応・ 商品の画像URL
 package com.basemarket.entity;
 
 import java.time.LocalDateTime;
@@ -22,31 +21,25 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "item_images", uniqueConstraints = {
-		@UniqueConstraint(columnNames = { "items_id", "display_order" })
-})
+@Table(name = "bookmarks", uniqueConstraints = @UniqueConstraint(columnNames = { "user_id", "items_id" }))
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ItemImages {
+public class Bookmarks {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "images_id")
 	private Long id;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "user_id", nullable = false)
+	private Users user;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "items_id", nullable = false)
 	private Items item;
-
-	@Column(name = "images_url", nullable = false, length = 500)
-	private String imageUrl;
-
-	// 何枚目か（1,2,3...）
-	@Column(name = "display_order", nullable = false)
-	private Integer displayOrder;
 
 	@Column(name = "created_at", nullable = false)
 	private LocalDateTime createdAt;

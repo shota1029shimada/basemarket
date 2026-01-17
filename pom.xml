@@ -50,7 +50,12 @@
     		<scope>runtime</scope>
 		</dependency>
 
-		
+		<!-- Stripe Java SDK -->
+		<dependency>
+    		<groupId>com.stripe</groupId>
+    		<artifactId>stripe-java</artifactId>
+    		<version>24.10.0</version>
+		</dependency>
 
 <!-- Cloudinary画像管理 -->
 		<dependency>
@@ -121,7 +126,5 @@
 		</dependency>
 		
 	</dependencies>
-
 	
-
 </project>

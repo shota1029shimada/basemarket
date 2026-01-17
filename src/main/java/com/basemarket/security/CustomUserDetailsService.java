@@ -4,12 +4,12 @@ package com.basemarket.security;
 
 import java.util.List;
 
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import com.basemarket.entity.Users;
@@ -20,7 +20,6 @@ import lombok.RequiredArgsConstructor;
 //Spring Security がログイン時に呼び出すクラス
 @Service // Spring に管理される Service クラス
 @RequiredArgsConstructor // ← Lombok：finalなフィールドのコンストラクタを自動生成
-@Component
 public class CustomUserDetailsService implements UserDetailsService {
 
 	// UsersテーブルへアクセスするRepository
@@ -41,7 +40,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
 		//BANされているユーザーはログイン不可
 		if (user.isBanned()) {
-			throw new UsernameNotFoundException("このユーザーはBANされています");
+			throw new DisabledException("このユーザーはBANされています");
 		}
 
 		//ユーザーの権限を作成

@@ -16,17 +16,15 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.basemarket.service.CustomUserDetailsService;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtUtil jwtUtil;
 	private final CustomUserDetailsService userDetailsService;
 
-	/**
-	 * コンストラクタインジェクション（推奨）
-	 */
 	public JwtAuthenticationFilter(
 			JwtUtil jwtUtil,
 			CustomUserDetailsService userDetailsService) {
@@ -34,11 +32,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		this.userDetailsService = userDetailsService;
 	}
 
-	/**
-	 * フィルターの本体
-	 *
-	 * リクエストが来るたびに自動で呼ばれる
-	 */
 	@Override
 	protected void doFilterInternal(
 			HttpServletRequest request,
@@ -47,10 +40,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 		String token = null;
 
-		/**
-		 * 【JWT取得】
-		 * 今回の設計では「HttpOnly Cookie」からJWTを取得する
-		 */
+		// JWT取得（Cookie）
 		if (request.getCookies() != null) {
 			for (Cookie cookie : request.getCookies()) {
 				if ("JWT".equals(cookie.getName())) {
@@ -60,52 +50,41 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			}
 		}
 
-		//トークンが存在し、まだ認証されていない場合のみ処理
-		//↓ログインしているユーザー情報
+		// すでに認証されていない場合のみ処理
 		if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-			// トークンが有効か検証
-			if (jwtUtil.validateToken(token)) {
+			try {
+				// トークン検証
+				if (jwtUtil.validateToken(token)) {
 
-				// トークンからユーザー名（email）を取得
-				String username = jwtUtil.getUsernameFromToken(token);
+					// ユーザー名取得
+					String username = jwtUtil.getUsernameFromToken(token);
 
-				/**
-				 * UserDetails をDBから取得
-				 * → CustomUserDetailsService が呼ばれる
-				 */
-				UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+					// DBからユーザー取得
+					UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-				/**
-				 * Spring Security 用の認証オブジェクトを作成
-				 *
-				 * 第1引数：ユーザー情報
-				 * 第2引数：パスワード（JWTなので null）
-				 * 第3引数：権限（ROLE_USER など）
-				 */
-				UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-						userDetails,
-						null,
-						userDetails.getAuthorities());
+					// 認証オブジェクト生成
+					UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+							userDetails,
+							null,
+							userDetails.getAuthorities());
 
-				// リクエスト情報をセット（IPアドレスなど）
-				authentication.setDetails(
-						new WebAuthenticationDetailsSource().buildDetails(request));
+					authentication.setDetails(
+							new WebAuthenticationDetailsSource()
+									.buildDetails(request));
 
-				/**
-				 * ★最重要★
-				 * ここで Spring Security に
-				 * 「このリクエストはログイン済です」
-				 * と教えている
-				 */
-				SecurityContextHolder.getContext()
-						.setAuthentication(authentication);
+					// SecurityContextへ登録
+					SecurityContextHolder.getContext()
+							.setAuthentication(authentication);
+				}
+
+			} catch (Exception e) {
+				// JWT不正・期限切れ等
+				log.warn("JWT検証失敗: {}", e.getMessage());
 			}
 		}
 
-		/**
-		 * 次のフィルターへ処理を渡す
-		 */
+		// 次のフィルターへ
 		filterChain.doFilter(request, response);
 	}
 }

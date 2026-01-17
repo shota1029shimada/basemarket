@@ -1,4 +1,3 @@
-//item_imagesテーブルに対応・ 商品の画像URL
 package com.basemarket.entity;
 
 import java.time.LocalDateTime;
@@ -13,7 +12,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,31 +20,41 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "item_images", uniqueConstraints = {
-		@UniqueConstraint(columnNames = { "items_id", "display_order" })
-})
+@Table(name = "notifications")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ItemImages {
+public class Notifications {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "images_id")
 	private Long id;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "items_id", nullable = false)
-	private Items item;
+	@JoinColumn(name = "user_id", nullable = false)
+	private Users user;
 
-	@Column(name = "images_url", nullable = false, length = 500)
-	private String imageUrl;
+	@Column(name = "notification_type", nullable = false)
+	private String notificationType;
 
-	// 何枚目か（1,2,3...）
-	@Column(name = "display_order", nullable = false)
-	private Integer displayOrder;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "related_item_id")
+	private Items relatedItem;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "related_order_id")
+	private Orders relatedOrder;
+
+	@Column(nullable = false, columnDefinition = "TEXT")
+	private String message;
+
+	@Column(name = "is_read", nullable = false)
+	private boolean isRead = false;
+
+	@Column(name = "is_sent_line", nullable = false)
+	private boolean isSentLine = false;
 
 	@Column(name = "created_at", nullable = false)
 	private LocalDateTime createdAt;

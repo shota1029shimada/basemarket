@@ -1,10 +1,53 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta charset="UTF-8">
-<title>Insert title here</title>
+    <meta charset="UTF-8">
+    <title>商品削除確認</title>
+    <link rel="stylesheet" th:href="@{/css/layout.css}">
 </head>
 <body>
+
+<h1>商品削除の確認</h1>
+
+<p>以下の商品を削除してもよろしいですか？</p>
+
+<hr>
+
+<div>
+    <p>
+        <strong>商品名：</strong>
+        <span th:text="${item.title}">商品名</span>
+    </p>
+
+    <p>
+        <strong>価格：</strong>
+        <span th:text="${item.price}">0</span> 円
+    </p>
+
+    <p>
+        <strong>カテゴリ：</strong>
+        <span th:text="${item.categoryName}">カテゴリ</span>
+    </p>
+</div>
+
+<hr>
+
+<!-- 削除実行 -->
+<form th:action="@{/api/items/{id}(id=${item.id})}"
+      method="post">
+
+    <!-- DELETE 疑似対応 -->
+    <input type="hidden" name="_method" value="DELETE"/>
+
+    <button type="submit">削除する</button>
+</form>
+
+<br>
+
+<!-- キャンセル -->
+<a th:href="@{/items/{id}(id=${item.id})}">
+    キャンセル（商品詳細へ戻る）
+</a>
 
 </body>
 </html>
