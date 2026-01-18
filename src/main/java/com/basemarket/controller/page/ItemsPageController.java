@@ -23,13 +23,6 @@ public class ItemsPageController {
 		return "items/index";
 	}
 
-	// 商品詳細
-	@GetMapping("/items/{id}")
-	public String detail(@PathVariable Long id, Model model) {
-		model.addAttribute("item", itemsService.getItemDetail(id));
-		return "items/detail";
-	}
-
 	// 出品画面
 	@GetMapping("/items/new")
 	public String newItem() {
@@ -39,15 +32,23 @@ public class ItemsPageController {
 	// 編集画面
 	@GetMapping("/items/{id}/edit")
 	public String edit(@PathVariable Long id, Model model) {
-		model.addAttribute("item", itemsService.getItemDetail(id));
+		model.addAttribute("item", itemsService.getItemById(id));
 		return "items/edit";
 	}
 
-	//　削除
+	// 削除確認画面
 	@GetMapping("/items/{id}/delete")
 	public String deleteConfirm(@PathVariable Long id, Model model) {
-		ItemResponse item = itemsService.findById(id);
+		ItemResponse item = itemsService.getItemById(id);
 		model.addAttribute("item", item);
 		return "items/delete";
 	}
+
+	// 商品詳細
+	@GetMapping("/items/{id:\\d+}") //数値制約
+	public String detail(@PathVariable Long id, Model model) {
+		model.addAttribute("item", itemsService.getItemById(id));
+		return "items/detail";
+	}
+
 }

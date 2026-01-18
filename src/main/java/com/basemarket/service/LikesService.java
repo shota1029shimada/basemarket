@@ -1,12 +1,8 @@
 package com.basemarket.service;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.basemarket.dto.response.ItemResponse;
 import com.basemarket.entity.Items;
 import com.basemarket.entity.Likes;
 import com.basemarket.entity.Users;
@@ -27,49 +23,39 @@ public class LikesService {
 	private final SecurityUtil securityUtil;
 
 	/**
-	 * 商品にいいね追加
+	 * いいね追加（冪等）
 	 */
 	public void addLike(Long itemId) {
+
 		Users loginUser = securityUtil.getLoginUser();
 
 		Items item = itemsRepository.findById(itemId)
 				.orElseThrow(() -> new ResourceNotFoundException("商品が存在しません"));
 
-		// 既にいいねしている場合は何もしない
-		if (likesRepository.existsByItemAndUser(item, loginUser)) {
+		// 既にいいね済みなら何もしない（冪等成功）
+		if (likesRepository.existsByUserAndItem(loginUser, item)) {
 			return;
 		}
 
 		Likes like = Likes.builder()
-				.item(item)
 				.user(loginUser)
+				.item(item)
 				.build();
 
 		likesRepository.save(like);
 	}
 
 	/**
-	 * 商品のいいね解除
+	 * いいね解除（冪等）
 	 */
 	public void removeLike(Long itemId) {
+
 		Users loginUser = securityUtil.getLoginUser();
 
 		Items item = itemsRepository.findById(itemId)
 				.orElseThrow(() -> new ResourceNotFoundException("商品が存在しません"));
 
-		likesRepository.findByItemAndUser(item, loginUser)
+		likesRepository.findByUserAndItem(loginUser, item)
 				.ifPresent(likesRepository::delete);
-	}
-
-	/**
-	 * ログインユーザーがいいねした商品一覧
-	 */
-	public List<ItemResponse> getLikedItems() {
-		Users loginUser = securityUtil.getLoginUser();
-
-		return likesRepository.findAllByUser(loginUser)
-				.stream()
-				.map(like -> new ItemResponse(like.getItem()))
-				.collect(Collectors.toList());
 	}
 }

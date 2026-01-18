@@ -1,62 +1,60 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>商品詳細</title>
-    <link rel="stylesheet" th:href="@{/css/layout.css}">
+  <meta charset="UTF-8" />
+  <title th:text="${item.title}">Item Detail</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 </head>
 <body>
+  <a href="/items">← 一覧へ</a>
 
-<h1>商品詳細</h1>
+  <h1 th:text="${item.title}">title</h1>
+  <p th:text="${item.description}">description</p>
+  <p><span th:text="${item.price}">0</span>円</p>
+  <p>状態: <span th:text="${item.condition}">condition</span></p>
 
-<div>
-    <h2 th:text="${item.title}">商品名</h2>
-</div>
+  <div id="flash" style="margin:8px 0;"></div>
 
-<div>
-    <p>
-        <strong>価格：</strong>
-        <span th:text="${item.price}">0</span> 円
-    </p>
-</div>
+  <div>
+    <button id="btn-bookmark" type="button" th:attr="data-item-id=${item.id}">
+      ブックマークする
+    </button>
 
-<div>
-    <p>
-        <strong>カテゴリ：</strong>
-        <span th:text="${item.categoryName}">カテゴリ</span>
-    </p>
-</div>
+    <button id="btn-unbookmark" type="button" th:attr="data-item-id=${item.id}">
+      ブックマーク解除
+    </button>
+  </div>
 
-<div>
-    <p>
-        <strong>商品状態：</strong>
-        <span th:text="${item.condition}">状態</span>
-    </p>
-</div>
+  <script>
+    const flash = (msg) => {
+      const el = document.getElementById('flash');
+      el.textContent = msg;
+      setTimeout(() => el.textContent = '', 2000);
+    };
 
-<div>
-    <p>
-        <strong>説明：</strong><br>
-        <span th:text="${item.description}">商品説明</span>
-    </p>
-</div>
+    async function callBookmark(itemId, method) {
+      const res = await fetch(`/api/bookmarks/${itemId}`, {
+        method,
+        headers: { 'Accept': 'application/json' },
+        credentials: 'same-origin'
+      });
 
-<hr>
+      if (!res.ok) {
+        flash(method === 'POST' ? '登録に失敗しました' : '解除に失敗しました');
+        return;
+      }
 
-<!-- 出品者本人のみ表示 -->
-<div th:if="${isSeller}">
-    <a th:href="@{/items/{id}/edit(id=${item.id})}">
-        編集する
-    </a>
-    |
-    <a th:href="@{/items/{id}/delete(id=${item.id})}">
-        削除する
-    </a>
-</div>
+      const data = await res.json().catch(() => null);
+      flash(data?.message ?? (method === 'POST' ? 'bookmarked' : 'unbookmarked'));
+    }
 
-<hr>
+    document.getElementById('btn-bookmark')?.addEventListener('click', (e) => {
+      callBookmark(e.target.dataset.itemId, 'POST');
+    });
 
-<a th:href="@{/items}">一覧へ戻る</a>
-
+    document.getElementById('btn-unbookmark')?.addEventListener('click', (e) => {
+      callBookmark(e.target.dataset.itemId, 'DELETE');
+    });
+  </script>
 </body>
 </html>

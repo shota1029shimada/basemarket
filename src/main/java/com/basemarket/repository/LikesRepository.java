@@ -1,3 +1,4 @@
+//likesテーブルへのCRUD操作 
 package com.basemarket.repository;
 
 import java.util.Optional;

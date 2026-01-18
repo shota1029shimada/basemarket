@@ -6,7 +6,6 @@ import java.util.List;
 import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,19 +31,6 @@ public class ItemsController {
 	private final ItemsService itemsService;
 
 	/**
-	 * 商品出品（ログイン必須）
-	 * POST /api/items
-	 */
-	@PostMapping
-	public ResponseEntity<ItemResponse> createItem(
-			@RequestBody @Valid ItemsCreateRequest request,
-			Authentication authentication) {
-
-		ItemResponse response = itemsService.createItem(request, authentication);
-		return ResponseEntity.ok(response);
-	}
-
-	/**
 	 * 商品一覧（新着順）
 	 * GET /api/items
 	 */
@@ -54,11 +40,13 @@ public class ItemsController {
 	}
 
 	/**
-	 * 商品詳細（※閲覧数は増やさない）
+	 * 商品詳細
 	 * GET /api/items/{id}
 	 */
 	@GetMapping("/{id}")
-	public ResponseEntity<ItemResponse> getItem(@PathVariable Long id) {
+	public ResponseEntity<ItemResponse> getItem(
+			@PathVariable Long id) {
+
 		return ResponseEntity.ok(itemsService.getItemById(id));
 	}
 
@@ -87,18 +75,28 @@ public class ItemsController {
 	}
 
 	/**
+	 * 商品出品（ログイン必須）
+	 * POST /api/items
+	 */
+	@PostMapping
+	public ResponseEntity<ItemResponse> createItem(
+			@RequestBody @Valid ItemsCreateRequest request) {
+
+		return ResponseEntity.ok(
+				itemsService.createItem(request));
+	}
+
+	/**
 	 * 商品編集（出品者本人のみ）
 	 * PUT /api/items/{id}
 	 */
 	@PutMapping("/{id}")
 	public ResponseEntity<ItemResponse> updateItem(
 			@PathVariable Long id,
-			@RequestBody @Valid ItemsUpdateRequest request,
-			Authentication authentication) {
+			@RequestBody @Valid ItemsUpdateRequest request) {
 
-		ItemResponse response = itemsService.updateItem(id, request, authentication);
-
-		return ResponseEntity.ok(response);
+		return ResponseEntity.ok(
+				itemsService.updateItem(id, request));
 	}
 
 	/**
@@ -107,10 +105,9 @@ public class ItemsController {
 	 */
 	@DeleteMapping("/{id}")
 	public ResponseEntity<Void> deleteItem(
-			@PathVariable Long id,
-			Authentication authentication) {
+			@PathVariable Long id) {
 
-		itemsService.deleteItem(id, authentication);
+		itemsService.deleteItem(id);
 		return ResponseEntity.noContent().build();
 	}
 }

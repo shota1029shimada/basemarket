@@ -66,9 +66,7 @@ public class AuthController {
 		// JWTを Cookie に保存
 		Cookie cookie = new Cookie("JWT", jwt);
 		cookie.setHttpOnly(true); // JSからアクセス不可
-		//cookie.setSecure(false); // 本番は true
-		@Value("${app.cookie.secure}")
-		private boolean secure;
+		cookie.setSecure(false); // 本番は true
 		cookie.setPath("/");
 		cookie.setMaxAge(24 * 60 * 60);
 

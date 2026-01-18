@@ -33,10 +33,10 @@ public class ItemResponse {
 		this.condition = item.getCondition();
 
 		this.sellerId = item.getSeller().getId();
-		this.sellerName = item.getSeller().getName();
+		this.sellerName = item.getSeller().getUsername(); // 修正
 
 		this.categoryId = item.getCategory().getId();
-		this.categoryName = item.getCategory().getName();
+		this.categoryName = item.getCategory().getCategoryName(); // 修正
 
 		this.viewsCount = item.getViewsCount();
 		this.createdAt = item.getCreatedAt();

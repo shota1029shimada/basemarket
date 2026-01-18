@@ -1,4 +1,4 @@
-
+//categoriesテーブルへのCRUD操作
 package com.basemarket.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;

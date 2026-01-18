@@ -5,8 +5,7 @@ import jakarta.annotation.PostConstruct;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-
-import com.stripe.Stripe;
+//import com.stripe.Stripe;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -29,7 +28,7 @@ public class StripeConfig {
 	public void init() {
 		// apiKey が設定されている場合のみ反映（共存型で安全）
 		if (apiKey != null && !apiKey.isBlank()) {
-			Stripe.apiKey = apiKey;
+			//Stripe.apiKey = apiKey;
 		}
 	}
 }

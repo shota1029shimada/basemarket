@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bookmarks</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body>
+  <h1>ブックマーク一覧</h1>
+
+  <div id="flash" style="margin:8px 0;"></div>
+
+  <div th:if="${#lists.isEmpty(items)}">
+    <p>ブックマークはまだありません。</p>
+  </div>
+
+  <ul th:if="${!#lists.isEmpty(items)}">
+    <li th:each="item : ${items}" th:attr="data-item-id=${item.id}">
+      <a th:href="@{/items/{id}(id=${item.id})}">
+        <span th:text="${item.title}">title</span>
+      </a>
+      <span> / </span>
+      <span th:text="${item.price}">0</span><span>円</span>
+
+      <button type="button" class="btn-unbookmark">解除</button>
+    </li>
+  </ul>
+
+  <script>
+    const flash = (msg) => {
+      const el = document.getElementById('flash');
+      el.textContent = msg;
+      setTimeout(() => el.textContent = '', 2000);
+    };
+
+    document.addEventListener('click', async (e) => {
+      if (!e.target.classList.contains('btn-unbookmark')) return;
+
+      const li = e.target.closest('li[data-item-id]');
+      const itemId = li?.dataset?.itemId;
+      if (!itemId) return;
+
+      try {
+        const res = await fetch(`/api/bookmarks/${itemId}`, {
+          method: 'DELETE',
+          headers: { 'Accept': 'application/json' },
+          credentials: 'same-origin' // Cookie(JWT)送付
+        });
+
+        if (!res.ok) {
+          flash('解除に失敗しました');
+          return;
+        }
+
+        // 画面から消す
+        li.remove();
+        flash('ブックマーク解除しました');
+
+      } catch (err) {
+        console.error(err);
+        flash('通信に失敗しました');
+      }
+    });
+  </script>
+</body>
+</html>

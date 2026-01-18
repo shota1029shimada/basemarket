@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -20,7 +21,7 @@
         <a th:href="@{/items/{id}(id=${item.id})}">
             <span th:text="${item.title}">商品名</span>
         </a>
-        /
+        
         <span th:text="${item.price}">価格</span> 円
     </li>
 </ul>

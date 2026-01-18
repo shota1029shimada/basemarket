@@ -12,13 +12,13 @@ import lombok.Setter;
 @Setter
 public class ItemsCreateRequest {
 
-	@NotBlank //文字列専用のアノテーション(nullでも、空文字列でも、空白でもあってはならない)
+	@NotBlank
 	private String title;
 
 	@NotBlank
 	private String description;
 
-	@NotNull //nullであってはならない(空の文字列（""）や空のコレクションは許す)
+	@NotNull
 	private Integer price;
 
 	@NotBlank
@@ -26,7 +26,4 @@ public class ItemsCreateRequest {
 
 	@NotNull
 	private Long categoryId;
-
-	@NotNull
-	private Long sellerId;//出品者ID → users.user_id
 }

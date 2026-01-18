@@ -18,7 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import lombok.extern.slf4j.Slf4j;
 
-@Slf4j
+@Slf4j //ログ出力用アノテーション
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
