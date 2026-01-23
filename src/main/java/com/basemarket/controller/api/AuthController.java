@@ -1,85 +1,81 @@
-// 認証（ログイン）専用コントローラー
+//APIではなく、認証専用の画面遷移コントローラ
 package com.basemarket.controller.api;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.basemarket.dto.request.LoginRequest;
 import com.basemarket.dto.request.RegisterRequest;
-import com.basemarket.dto.response.LoginResponse;
 import com.basemarket.security.JwtUtil;
 import com.basemarket.service.AuthService;
 
 import lombok.RequiredArgsConstructor;
 
-@RestController
+@Controller
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
-	// Spring Security の認証処理を担当するクラス
 	private final AuthenticationManager authenticationManager;
-	//登録処理の本体
 	private final AuthService authService;
-	// JWTの生成・検証を行うユーティリティ
 	private final JwtUtil jwtUtil;
 
-	//ユーザー登録API
+	/**
+	 * 新規ー登録（画面）
+	 * POST /auth/register
+	 */
 	@PostMapping("/register")
-	public ResponseEntity<?> register(
-			@Valid @RequestBody RegisterRequest request) {
+	public String register(@Valid RegisterRequest request) {
 		authService.register(request);
-		return ResponseEntity.ok("登録が完了しました");
+		return "redirect:/login"; // UC-A05
 	}
 
-	// ログイン処理
+	/**
+	 * ログイン（画面）
+	 * POST /auth/login
+	 */
 	@PostMapping("/login")
-	public ResponseEntity<LoginResponse> login(
-			@Valid @RequestBody LoginRequest request,
+	public String login(
+			@Valid LoginRequest request,
 			HttpServletResponse response) {
 
-		// email + password を Security に渡す
 		UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
 				request.getEmail(),
 				request.getPassword());
 
-		// 認証（CustomUserDetailsService が呼ばれる）
 		Authentication authentication = authenticationManager.authenticate(authToken);
 
-		// 認証成功 → セキュリティコンテキストに保存
-		SecurityContextHolder.getContext().setAuthentication(authentication);
+		SecurityContextHolder.getContext()
+				.setAuthentication(authentication);
 
-		// JWT発行
 		String jwt = jwtUtil.generateToken(authentication.getName());
 
-		// JWTを Cookie に保存
 		Cookie cookie = new Cookie("JWT", jwt);
-		cookie.setHttpOnly(true); // JSからアクセス不可
-		cookie.setSecure(false); // 本番は true
+		cookie.setHttpOnly(true);
+		cookie.setSecure(false); // 本番 true
 		cookie.setPath("/");
 		cookie.setMaxAge(24 * 60 * 60);
 
 		response.addCookie(cookie);
 
-		return ResponseEntity.ok(new LoginResponse("Login successful"));
+		return "redirect:/items"; // UC-A02
 	}
 
-	// ログアウト
+	/**
+	 * ログアウト
+	 */
 	@PostMapping("/logout")
-	public ResponseEntity<Void> logout(HttpServletResponse response) {
+	public String logout(HttpServletResponse response) {
 
-		// Cookie削除
 		Cookie cookie = new Cookie("JWT", null);
 		cookie.setHttpOnly(true);
 		cookie.setSecure(false);
@@ -88,6 +84,6 @@ public class AuthController {
 
 		response.addCookie(cookie);
 
-		return ResponseEntity.ok().build();
+		return "redirect:/login"; // UC-A03
 	}
 }

@@ -34,6 +34,7 @@ public class Users {
 
 	@Id // ← 主キー
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "users_id")
 	// ↑ DB側でIDを自動採番（PostgreSQLのserial相当）
 	private Long id;
 
