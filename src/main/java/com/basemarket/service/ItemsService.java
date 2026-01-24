@@ -16,6 +16,7 @@ import com.basemarket.exception.ResourceNotFoundException;
 import com.basemarket.exception.UnauthorizedException;
 import com.basemarket.repository.CategoriesRepository;
 import com.basemarket.repository.ItemsRepository;
+import com.basemarket.repository.UsersRepository;
 import com.basemarket.security.SecurityUtil;
 
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ public class ItemsService {
 	private final ItemsRepository itemsRepository;
 	private final CategoriesRepository categoriesRepository;
 	private final SecurityUtil securityUtil;
+	private final UsersRepository usersRepository;
 
 	// 商品一覧（新着順）
 	public List<ItemResponse> getLatestItems() {
@@ -78,10 +80,13 @@ public class ItemsService {
 	}
 
 	// 商品出品
+	// 商品出品（B案：認証なし）
 	public ItemResponse createItem(ItemsCreateRequest request) {
 
-		// ログインユーザー取得（SecurityContext から）
-		Users loginUser = securityUtil.getLoginUser();
+		// B案：Securityは無視。DBに存在するユーザーを仮の出品者として使う
+		Users seller = usersRepository.findAll().stream()
+				.findFirst()
+				.orElseThrow(() -> new ResourceNotFoundException("ユーザーが存在しません（usersテーブルが空です）"));
 
 		// カテゴリ存在チェック
 		Categories category = categoriesRepository.findById(request.getCategoryId())
@@ -89,7 +94,7 @@ public class ItemsService {
 
 		// Entity作成
 		Items item = new Items();
-		item.setSeller(loginUser);
+		item.setSeller(seller);
 		item.setTitle(request.getTitle());
 		item.setDescription(request.getDescription());
 		item.setPrice(request.getPrice());

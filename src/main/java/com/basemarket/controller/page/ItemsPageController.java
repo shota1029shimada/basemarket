@@ -1,6 +1,8 @@
 //商品に関する画面遷移とフォーム処理を担当
 package com.basemarket.controller.page;
 
+import java.util.List;
+
 import jakarta.validation.Valid;
 
 import org.springframework.stereotype.Controller;
@@ -55,53 +57,37 @@ public class ItemsPageController {
 
 	// 出品処理
 	@PostMapping("/items") //POST /items
-	// ・出品フォームの送信先
-	// ・バリデーション → エラーなら再表示、OKなら登録
 	public String create(
 			@Valid ItemsCreateRequest request,
 			BindingResult bindingResult,
 			Model model) {
 
-		// ✅ @Valid
-		// ItemsCreateRequest に付与された
-		// @NotBlank / @Size / @NotNull などの制約を検証する
-
-		// ✅ BindingResult
-		// バリデーション結果が格納される
-		// ※ @Valid の直後に書く必要がある（Springのルール）
+		// バリデーションエラーがある場合
 		if (bindingResult.hasErrors()) {
 
-			// ❌ 入力エラーがある場合
-			// ・入力値をそのまま画面に戻す
-			// ・エラーメッセージはThymeleaf側で表示
+			// 入力値を戻す（将来 th:object に戻すため）
 			model.addAttribute("itemsCreateRequest", request);
 
-			// 再度 出品画面を表示
+			// カテゴリ一覧（エラー時に再表示用）
+			model.addAttribute("categories", categoriesRepository.findAll());
+
+			// ★B案：th:object を使わないため、エラーメッセージを List で渡す
+			List<String> errors = bindingResult.getAllErrors()
+					.stream()
+					.map(error -> error.getDefaultMessage())
+					.toList();
+
+			model.addAttribute("errors", errors);
+
+			// 出品画面を再表示
 			return "items/new";
 		}
 
-		// ✅ バリデーションOKの場合
-		// 実際の登録処理は Service に委譲
+		// バリデーションOK → 出品処理
 		itemsService.createItem(request);
 
-		// PRGパターン
-		// ・POST → redirect → GET
-		// ・二重送信防止
+		// 成功時は一覧画面へ（PRGパターン）
 		return "redirect:/items";
-	}
-
-	// 編集画面
-	@GetMapping("/items/{id}/edit")
-	// ✅ PathVariable
-	// URLの {id} 部分を引数として受け取る
-	// 例： /items/10/edit → id = 10
-	public String edit(@PathVariable Long id, Model model) {
-
-		// 編集対象の商品を取得
-		model.addAttribute("item", itemsService.getItemById(id));
-
-		// templates/items/edit.html
-		return "items/edit";
 	}
 
 	// 削除確認画面
