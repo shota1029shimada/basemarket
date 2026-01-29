@@ -33,13 +33,11 @@
 <hr>
 
 <!-- 削除実行 -->
-<form th:action="@{/api/items/{id}(id=${item.id})}"
-      method="post">
-
-    <!-- DELETE 疑似対応 -->
-    <input type="hidden" name="_method" value="DELETE"/>
-
-    <button type="submit">削除する</button>
+<form th:action="@{/items/{id}/delete(id=${item.id})}" method="post">
+  <div class="bm-actions">
+    <a class="bm-btn" th:href="@{/items/{id}(id=${item.id})}">戻る</a>
+    <button class="bm-btn" type="submit">削除する</button>
+  </div>
 </form>
 
 <br>

@@ -7,13 +7,11 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import com.basemarket.dto.request.ItemsCreateRequest;
-import com.basemarket.dto.request.ItemsUpdateRequest;
 import com.basemarket.dto.response.ItemResponse;
 import com.basemarket.entity.Categories;
 import com.basemarket.entity.Items;
 import com.basemarket.entity.Users;
 import com.basemarket.exception.ResourceNotFoundException;
-import com.basemarket.exception.UnauthorizedException;
 import com.basemarket.repository.CategoriesRepository;
 import com.basemarket.repository.ItemsRepository;
 import com.basemarket.repository.UsersRepository;
@@ -108,52 +106,29 @@ public class ItemsService {
 		return new ItemResponse(item);
 	}
 
-	// 商品編集
-	public ItemResponse updateItem(Long itemId, ItemsUpdateRequest request) {
+	// 商品更新
+	public ItemResponse updateItem(Long id, ItemsCreateRequest request) {
 
-		// 商品取得
-		Items item = itemsRepository.findById(itemId)
+		Items item = itemsRepository.findById(id)
 				.orElseThrow(() -> new ResourceNotFoundException("商品が存在しません"));
 
-		// ログインユーザー取得
-		Users loginUser = securityUtil.getLoginUser();
-
-		// 出品者本人チェック
-		if (!item.getSeller().getId().equals(loginUser.getId())) {
-			throw new UnauthorizedException("出品者本人のみ編集可能です");
-		}
-
-		// カテゴリ存在チェック
 		Categories category = categoriesRepository.findById(request.getCategoryId())
 				.orElseThrow(() -> new ResourceNotFoundException("カテゴリが存在しません"));
 
-		// 更新処理
 		item.setTitle(request.getTitle());
 		item.setDescription(request.getDescription());
 		item.setPrice(request.getPrice());
 		item.setCondition(request.getCondition());
 		item.setCategory(category);
 
+		itemsRepository.save(item);
 		return new ItemResponse(item);
 	}
 
 	// 商品削除
-	public void deleteItem(Long itemId) {
-
-		// 商品取得
-		Items item = itemsRepository.findById(itemId)
+	public void deleteItem(Long id) {
+		Items item = itemsRepository.findById(id)
 				.orElseThrow(() -> new ResourceNotFoundException("商品が存在しません"));
-
-		// ログインユーザー取得
-		Users loginUser = securityUtil.getLoginUser();
-		System.out.println("LOGIN USER => id=" + loginUser.getId() + ", email=" + loginUser.getEmail());
-
-		// 権限チェック（出品者のみ）
-		if (!item.getSeller().getId().equals(loginUser.getId())) {
-			throw new UnauthorizedException("この商品を削除する権限がありません");
-		}
-
-		// 削除
 		itemsRepository.delete(item);
 	}
 }

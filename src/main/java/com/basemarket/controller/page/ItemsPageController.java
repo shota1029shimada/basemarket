@@ -90,6 +90,37 @@ public class ItemsPageController {
 		return "redirect:/items";
 	}
 
+	@PostMapping("/items/{id}")
+	public String update(
+			@PathVariable Long id,
+			@Valid ItemsCreateRequest request,
+			BindingResult bindingResult,
+			Model model) {
+
+		if (bindingResult.hasErrors()) {
+			model.addAttribute("item", itemsService.getItemById(id));
+			model.addAttribute("itemsCreateRequest", request);
+			model.addAttribute("categories", categoriesRepository.findAll());
+
+			// B案（th:object無し）用エラー表示
+			List<String> errors = bindingResult.getAllErrors().stream()
+					.map(e -> e.getDefaultMessage())
+					.toList();
+			model.addAttribute("errors", errors);
+
+			return "items/edit";
+		}
+
+		itemsService.updateItem(id, request);
+		return "redirect:/items/" + id;
+	}
+
+	@PostMapping("/items/{id}/delete")
+	public String delete(@PathVariable Long id) {
+		itemsService.deleteItem(id);
+		return "redirect:/items";
+	}
+
 	// 削除確認画面
 	@GetMapping("/items/{id}/delete")
 	// ・実際の削除は行わない
@@ -117,4 +148,31 @@ public class ItemsPageController {
 		// templates/items/detail.html
 		return "items/detail";
 	}
+
+	@PostMapping("/items/{id}")
+	public String update(
+			@PathVariable Long id,
+			@Valid ItemsCreateRequest request,
+			BindingResult bindingResult,
+			Model model) {
+
+		if (bindingResult.hasErrors()) {
+			// 画面再表示に必要なデータ
+			model.addAttribute("item", itemsService.getItemById(id));
+			model.addAttribute("itemsCreateRequest", request);
+			model.addAttribute("categories", categoriesRepository.findAll());
+
+			// B案：th:object無し想定のエラー表示
+			List<String> errors = bindingResult.getAllErrors().stream()
+					.map(e -> e.getDefaultMessage())
+					.toList();
+			model.addAttribute("errors", errors);
+
+			return "items/edit";
+		}
+
+		itemsService.updateItem(id, request);
+		return "redirect:/items/" + id;
+	}
+
 }

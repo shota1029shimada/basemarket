@@ -1,66 +1,69 @@
-<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>商品編集</title>
-    <link rel="stylesheet" th:href="@{/css/layout.css}">
-</head>
+<!doctype html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/head :: head('商品編集')"></head>
 <body>
+  <div th:replace="fragments/header :: header"></div>
+  <div th:replace="fragments/flash :: flash"></div>
 
-<h1>商品編集</h1>
+  <main class="bm-main">
+    <div class="bm-container">
+      <section class="bm-card" style="max-width:760px; margin:0 auto;">
+        <h1 style="margin-top:0;">商品編集</h1>
 
-<form th:action="@{/items/{id}(id=${item.id})}" method="post">
-    <!-- PUT対応 -->
-    <input type="hidden" name="_method" value="put">
+        <form class="bm-form" th:action="@{/items/{id}(id=${item.id})}" method="post">
 
-    <div>
-        <label>商品名</label><br>
-        <input type="text" name="title"
-               th:value="${item.title}" required>
+          <div th:if="${errors != null}" class="bm-card" style="margin-bottom:12px;">
+            <p style="margin:0 0 8px;">入力エラーがあります：</p>
+            <ul style="margin:0; padding-left:18px;">
+              <li th:each="e : ${errors}" th:text="${e}">error</li>
+            </ul>
+          </div>
+
+          <div class="bm-row">
+            <label class="bm-label">商品名</label>
+            <input class="bm-input" type="text" name="title" required
+                   th:value="${itemsCreateRequest != null ? itemsCreateRequest.title : item.title}" />
+          </div>
+
+          <div class="bm-row">
+            <label class="bm-label">カテゴリID</label>
+            <input class="bm-input" type="number" name="categoryId" min="1" required
+                   th:value="${itemsCreateRequest != null ? itemsCreateRequest.categoryId : item.categoryId}" />
+          </div>
+
+          <div class="bm-row">
+            <label class="bm-label">価格</label>
+            <input class="bm-input" type="number" name="price" min="0" required
+                   th:value="${itemsCreateRequest != null ? itemsCreateRequest.price : item.price}" />
+          </div>
+
+          <div class="bm-row">
+            <label class="bm-label">説明</label>
+            <textarea class="bm-textarea" name="description" required
+                      th:text="${itemsCreateRequest != null ? itemsCreateRequest.description : item.description}"></textarea>
+          </div>
+
+          <div class="bm-row">
+            <label class="bm-label">状態</label>
+            <select class="bm-select" name="condition" required>
+              <option value="">選択してください</option>
+              <option value="NEW"
+                th:selected="${(itemsCreateRequest != null ? itemsCreateRequest.condition : item.condition) == 'NEW'}">新品</option>
+              <option value="USED"
+                th:selected="${(itemsCreateRequest != null ? itemsCreateRequest.condition : item.condition) == 'USED'}">中古</option>
+            </select>
+          </div>
+
+          <div class="bm-actions" style="justify-content:flex-start;">
+            <a class="bm-btn" th:href="@{/items/{id}(id=${item.id})}">戻る</a>
+            <button class="bm-btn" type="submit">更新する</button>
+          </div>
+
+        </form>
+      </section>
     </div>
+  </main>
 
-    <div>
-        <label>商品説明</label><br>
-        <textarea name="description" rows="5" required
-                  th:text="${item.description}"></textarea>
-    </div>
-
-    <div>
-        <label>価格（円）</label><br>
-        <input type="number" name="price"
-               th:value="${item.price}" required>
-    </div>
-
-    <div>
-        <label>カテゴリ</label><br>
-        <select name="categoryId">
-            <option value="1"
-                th:selected="${item.categoryId == 1}">バット</option>
-            <option value="2"
-                th:selected="${item.categoryId == 2}">グローブ</option>
-            <option value="3"
-                th:selected="${item.categoryId == 3}">スパイク</option>
-        </select>
-    </div>
-
-    <div>
-        <label>商品状態</label><br>
-        <select name="condition">
-            <option value="NEW"
-                th:selected="${item.condition == 'NEW'}">新品</option>
-            <option value="USED"
-                th:selected="${item.condition == 'USED'}">中古</option>
-        </select>
-    </div>
-
-    <br>
-
-    <button type="submit">更新する</button>
-</form>
-
-<hr>
-
-<a th:href="@{/items/{id}(id=${item.id})}">詳細に戻る</a>
-
+  <div th:replace="fragments/footer :: footer"></div>
 </body>
 </html>
