@@ -13,12 +13,18 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.basemarket.dto.request.ItemsCreateRequest;
 import com.basemarket.dto.request.ItemsUpdateRequest;
 import com.basemarket.dto.response.ItemResponse;
+import com.basemarket.entity.Items;
+import com.basemarket.entity.Users;
+import com.basemarket.exception.UnauthorizedException;
 import com.basemarket.repository.CategoriesRepository;
+import com.basemarket.repository.ItemsRepository;
 import com.basemarket.service.ItemsService;
+import com.basemarket.security.SecurityUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -31,14 +37,38 @@ public class ItemsPageController {
 	// final フィールド（ItemsService）を引数に持つコンストラクタを自動生成
 	private final ItemsService itemsService;//商品に関する業務ロジックを担当するService
 	private final CategoriesRepository categoriesRepository; //
+	private final ItemsRepository itemsRepository;
+	private final SecurityUtil securityUtil;
 
 	// 商品一覧画面の表示
 	@GetMapping("/items") // GET /items
 	// ・未ログインでも閲覧可能（SecurityConfigでpermitAll）
-	public String index(Model model) {// Model
-		// Controller → View(HTML) にデータを渡すための入れ物
-		// items という名前でList<ItemResponse>（想定）をテンプレートに渡す
-		model.addAttribute("items", itemsService.getLatestItems());
+	public String index(
+			@RequestParam(required = false) String keyword,
+			@RequestParam(required = false) Long categoryId,
+			Model model) {
+		
+		// カテゴリー一覧を取得（検索フォーム用）
+		model.addAttribute("categories", categoriesRepository.findAll());
+		
+		// 検索キーワードとカテゴリーIDの両方が指定されている場合
+		if (keyword != null && !keyword.trim().isEmpty() && categoryId != null) {
+			// 検索 + カテゴリー絞り込み
+			model.addAttribute("items", itemsService.searchItemsByCategory(keyword.trim(), categoryId));
+			model.addAttribute("keyword", keyword.trim());
+			model.addAttribute("selectedCategoryId", categoryId);
+		} else if (keyword != null && !keyword.trim().isEmpty()) {
+			// 検索機能のみ
+			model.addAttribute("items", itemsService.searchItems(keyword.trim()));
+			model.addAttribute("keyword", keyword.trim());
+		} else if (categoryId != null) {
+			// カテゴリー別表示のみ
+			model.addAttribute("items", itemsService.getItemsByCategory(categoryId));
+			model.addAttribute("selectedCategoryId", categoryId);
+		} else {
+			// 通常の一覧表示（新着順）
+			model.addAttribute("items", itemsService.getLatestItems());
+		}
 
 		// templates/items/index.html を返す
 		return "items/index";
@@ -99,10 +129,24 @@ public class ItemsPageController {
 	// ・「本当に削除しますか？」という確認画面用
 	public String deleteConfirm(@PathVariable Long id, Model model) {
 
-		// 削除対象の商品情報を表示するため取得
-		ItemResponse item = itemsService.getItemById(id);
+		// 商品取得
+		Items item = itemsRepository.findById(id)
+				.orElseThrow(() -> new com.basemarket.exception.ResourceNotFoundException("商品が存在しません"));
 
-		model.addAttribute("item", item);
+		// ログインユーザー取得
+		Users loginUser = securityUtil.getLoginUser();
+
+		// 権限チェック：出品者本人または管理者のみアクセス可能
+		boolean isOwner = item.getSeller().getId().equals(loginUser.getId());
+		boolean isAdmin = securityUtil.isAdmin();
+		
+		if (!isOwner && !isAdmin) {
+			throw new UnauthorizedException("出品者本人または管理者のみ削除可能です");
+		}
+
+		// 削除対象の商品情報を表示するため取得
+		ItemResponse itemResponse = itemsService.getItemById(id);
+		model.addAttribute("item", itemResponse);
 
 		// templates/items/delete.html
 		return "items/delete";
@@ -123,7 +167,24 @@ public class ItemsPageController {
 	public String detail(@PathVariable Long id, Model model) {
 
 		// 商品詳細を取得
-		model.addAttribute("item", itemsService.getItemById(id));
+		ItemResponse item = itemsService.getItemById(id);
+		model.addAttribute("item", item);
+
+		// 編集・削除ボタンの表示判定（出品者本人または管理者のみ）
+		boolean canEditOrDelete = false;
+		try {
+			Items itemEntity = itemsRepository.findById(id)
+					.orElseThrow(() -> new com.basemarket.exception.ResourceNotFoundException("商品が存在しません"));
+			Users loginUser = securityUtil.getLoginUser();
+			boolean isOwner = itemEntity.getSeller().getId().equals(loginUser.getId());
+			boolean isAdmin = securityUtil.isAdmin();
+			canEditOrDelete = isOwner || isAdmin;
+		} catch (Exception e) {
+			// 未ログインまたはエラーの場合は編集・削除不可
+			canEditOrDelete = false;
+		}
+		model.addAttribute("canEditOrDelete", canEditOrDelete);
+
 		// templates/items/detail.html
 		return "items/detail";
 	}
@@ -131,6 +192,21 @@ public class ItemsPageController {
 	// 編集画面の表示
 	@GetMapping("/items/{id}/edit")
 	public String editForm(@PathVariable Long id, Model model) {
+		// 商品取得
+		Items item = itemsRepository.findById(id)
+				.orElseThrow(() -> new com.basemarket.exception.ResourceNotFoundException("商品が存在しません"));
+
+		// ログインユーザー取得
+		Users loginUser = securityUtil.getLoginUser();
+
+		// 権限チェック：出品者本人または管理者のみアクセス可能
+		boolean isOwner = item.getSeller().getId().equals(loginUser.getId());
+		boolean isAdmin = securityUtil.isAdmin();
+		
+		if (!isOwner && !isAdmin) {
+			throw new UnauthorizedException("出品者本人または管理者のみ編集可能です");
+		}
+
 		model.addAttribute("item", itemsService.getItemById(id));
 		model.addAttribute("categories", categoriesRepository.findAll());
 		return "items/edit";

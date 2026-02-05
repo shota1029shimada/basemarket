@@ -21,4 +21,7 @@ public interface ItemsRepository extends JpaRepository<Items, Long> {
 
 	// タイトル部分一致検索
 	List<Items> findByTitleContainingOrderByCreatedAtDesc(String keyword);
+
+	// タイトル部分一致検索 + カテゴリー絞り込み
+	List<Items> findByTitleContainingAndCategoryOrderByCreatedAtDesc(String keyword, Categories category);
 }

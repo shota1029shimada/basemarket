@@ -36,4 +36,20 @@ public class SecurityUtil {
 		return usersRepository.findByEmail(email)
 				.orElseThrow(() -> new ResourceNotFoundException("ユーザーが存在しません"));
 	}
+
+	/**
+	 * 現在ログイン中のユーザーが管理者かどうかを判定
+	 *
+	 * @return boolean 管理者の場合true
+	 */
+	public boolean isAdmin() {
+		try {
+			Users loginUser = getLoginUser();
+			String role = loginUser.getRole();
+			// "ADMIN" または "ROLE_ADMIN" を管理者として判定
+			return "ADMIN".equals(role) || "ROLE_ADMIN".equals(role);
+		} catch (Exception e) {
+			return false;
+		}
+	}
 }

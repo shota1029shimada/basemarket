@@ -12,7 +12,13 @@
       <a th:href="@{/items}" class="logo">BaseMarket</a>
       <nav class="nav-links">
         <a th:href="@{/items}">商品一覧</a>
-        <a th:href="@{/login}">ログイン</a>
+        <a th:href="@{/items/new}" th:if="${isLoggedIn}">出品する</a>
+        <a th:href="@{/bookmarks}">ブックマーク</a>
+        <a th:href="@{/login}" th:if="${!isLoggedIn}">ログイン</a>
+        <a th:href="@{/register}" th:if="${!isLoggedIn}">新規登録</a>
+        <form th:action="@{/auth/logout}" method="post" class="logout-form" th:if="${isLoggedIn}">
+          <button type="submit" class="btn-link">ログアウト</button>
+        </form>
       </nav>
     </div>
   </header>

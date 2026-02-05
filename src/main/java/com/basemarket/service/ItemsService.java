@@ -67,6 +67,19 @@ public class ItemsService {
 				.toList();
 	}
 
+	// 商品検索 + カテゴリー絞り込み
+	public List<ItemResponse> searchItemsByCategory(String keyword, Long categoryId) {
+		// カテゴリ存在チェック
+		Categories category = categoriesRepository.findById(categoryId)
+				.orElseThrow(() -> new ResourceNotFoundException("カテゴリが存在しません"));
+
+		// タイトル部分一致検索 + カテゴリー絞り込み
+		return itemsRepository.findByTitleContainingAndCategoryOrderByCreatedAtDesc(keyword, category)
+				.stream()
+				.map(ItemResponse::new)
+				.toList();
+	}
+
 	// 商品詳細（閲覧数 +1）
 	public ItemResponse getItemById(Long itemId) {
 
@@ -130,9 +143,12 @@ public class ItemsService {
 		// ログインユーザー取得
 		Users loginUser = securityUtil.getLoginUser();
 
-		// 出品者本人チェック
-		if (!item.getSeller().getId().equals(loginUser.getId())) {
-			throw new UnauthorizedException("出品者本人のみ編集可能です");
+		// 権限チェック：出品者本人または管理者のみ編集可能
+		boolean isOwner = item.getSeller().getId().equals(loginUser.getId());
+		boolean isAdmin = securityUtil.isAdmin();
+		
+		if (!isOwner && !isAdmin) {
+			throw new UnauthorizedException("出品者本人または管理者のみ編集可能です");
 		}
 
 		// カテゴリ存在チェック
@@ -161,11 +177,13 @@ public class ItemsService {
 
 		// ログインユーザー取得
 		Users loginUser = securityUtil.getLoginUser();
-		System.out.println("LOGIN USER => id=" + loginUser.getId() + ", email=" + loginUser.getEmail());
 
-		// 権限チェック（出品者のみ）
-		if (!item.getSeller().getId().equals(loginUser.getId())) {
-			throw new UnauthorizedException("この商品を削除する権限がありません");
+		// 権限チェック：出品者本人または管理者のみ削除可能
+		boolean isOwner = item.getSeller().getId().equals(loginUser.getId());
+		boolean isAdmin = securityUtil.isAdmin();
+		
+		if (!isOwner && !isAdmin) {
+			throw new UnauthorizedException("出品者本人または管理者のみ削除可能です");
 		}
 
 		// 削除
