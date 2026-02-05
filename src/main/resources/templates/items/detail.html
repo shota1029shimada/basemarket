@@ -1,60 +1,111 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <meta charset="UTF-8" />
-  <title th:text="${item.title}">Item Detail</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="_csrf" th:content="${_csrf?.token}" content="">
+  <meta name="_csrf_header" th:content="${_csrf?.headerName}" content="X-CSRF-TOKEN">
+  <title th:text="${item.title}">商品詳細</title>
+  <link rel="stylesheet" th:href="@{/css/layout.css}">
 </head>
 <body>
-  <a href="/items">← 一覧へ</a>
+  <header class="site-header">
+    <div class="header-inner">
+      <a th:href="@{/items}" class="logo">BaseMarket</a>
+      <nav class="nav-links">
+        <a th:href="@{/items}">商品一覧</a>
+        <a th:href="@{/items/new}">出品する</a>
+        <a th:href="@{/bookmarks}">ブックマーク</a>
+        <a th:href="@{/login}">ログイン</a>
+        <a th:href="@{/register}">新規登録</a>
+        <form th:action="@{/auth/logout}" method="post" class="logout-form">
+          <button type="submit" class="btn-link">ログアウト</button>
+        </form>
+      </nav>
+    </div>
+  </header>
 
-  <h1 th:text="${item.title}">title</h1>
-  <p th:text="${item.description}">description</p>
-  <p><span th:text="${item.price}">0</span>円</p>
-  <p>状態: <span th:text="${item.condition}">condition</span></p>
+  <main class="main-wrap">
+    <a th:href="@{/items}" class="btn btn-secondary mb-2">← 一覧へ</a>
 
-  <div id="flash" style="margin:8px 0;"></div>
+    <div class="detail-card">
+      <h1 class="detail-title" th:text="${item.title}">タイトル</h1>
+      <p class="detail-meta">
+        <span th:text="${item.sellerName}">出品者</span>
+        <span class="text-muted"> / </span>
+        <span th:text="${item.categoryName}">カテゴリ</span>
+        <span class="text-muted"> / </span>
+        <span th:text="${item.condition == 'NEW' ? '新品' : '中古'}">状態</span>
+        <span class="text-muted"> / 閲覧 </span>
+        <span th:text="${item.viewsCount}">0</span>
+      </p>
+      <p class="detail-description" th:text="${item.description}">説明</p>
+      <p class="detail-meta">
+        <strong class="price" th:text="|${item.price}円|">0円</strong>
+      </p>
 
-  <div>
-    <button id="btn-bookmark" type="button" th:attr="data-item-id=${item.id}">
-      ブックマークする
-    </button>
+      <div th:replace="~{fragments/flash :: flash}"></div>
+      <div class="detail-actions">
+        <button id="btn-bookmark" type="button" class="btn btn-primary" th:attr="data-item-id=${item.id}" th:if="${item.isBookmarked == null || item.isBookmarked == false}">ブックマークする</button>
+        <button id="btn-unbookmark" type="button" class="btn btn-secondary" th:attr="data-item-id=${item.id}" th:if="${item.isBookmarked == true}">ブックマーク解除</button>
+        <a th:href="@{/items/{id}/edit(id=${item.id})}" class="btn btn-secondary">編集する</a>
+        <a th:href="@{/items/{id}/delete(id=${item.id})}" class="btn btn-danger">削除する</a>
+      </div>
+    </div>
+  </main>
 
-    <button id="btn-unbookmark" type="button" th:attr="data-item-id=${item.id}">
-      ブックマーク解除
-    </button>
-  </div>
-
+  <footer th:replace="~{fragments/footer :: footer}"></footer>
+  <script th:src="@{/js/app.js}"></script>
   <script>
-    const flash = (msg) => {
-      const el = document.getElementById('flash');
-      el.textContent = msg;
-      setTimeout(() => el.textContent = '', 2000);
-    };
-
-    async function callBookmark(itemId, method) {
-      const res = await fetch(`/api/bookmarks/${itemId}`, {
-        method,
-        headers: { 'Accept': 'application/json' },
-        credentials: 'same-origin'
-      });
-
-      if (!res.ok) {
-        flash(method === 'POST' ? '登録に失敗しました' : '解除に失敗しました');
-        return;
+    (function () {
+      var flashEl = document.getElementById('flash');
+      var flash = function (msg) {
+        if (flashEl) {
+          flashEl.textContent = msg;
+          flashEl.className = 'flash-message';
+          setTimeout(function () { flashEl.textContent = ''; }, 2000);
+        }
+      };
+      function callBookmark(itemId, method) {
+        window.fetchWithCsrf('/api/bookmarks/' + itemId, {
+          method: method,
+          headers: { 'Accept': 'application/json' },
+          credentials: 'include' // Cookieを送信
+        }).then(function (res) {
+          if (res.status === 401 || res.status === 403) {
+            window.location.href = '/login';
+            return;
+          }
+          if (!res.ok) {
+            // エラーレスポンスの詳細を取得
+            return res.json().then(function(errData) {
+              flash(errData.message || (method === 'POST' ? '登録に失敗しました' : '解除に失敗しました'), 'error');
+              throw new Error('Request failed');
+            });
+          }
+          return res.json();
+        }).then(function (data) {
+          if (data) {
+            flash(method === 'POST' ? 'ブックマークしました' : '解除しました');
+            // ページをリロードして最新の状態を表示（確実な方法）
+            setTimeout(function() {
+              window.location.reload();
+            }, 500);
+          }
+        }).catch(function (err) {
+          if (err.message !== 'Request failed') {
+            flash('通信に失敗しました', 'error');
+            console.error('Bookmark error:', err);
+          }
+        });
       }
-
-      const data = await res.json().catch(() => null);
-      flash(data?.message ?? (method === 'POST' ? 'bookmarked' : 'unbookmarked'));
-    }
-
-    document.getElementById('btn-bookmark')?.addEventListener('click', (e) => {
-      callBookmark(e.target.dataset.itemId, 'POST');
-    });
-
-    document.getElementById('btn-unbookmark')?.addEventListener('click', (e) => {
-      callBookmark(e.target.dataset.itemId, 'DELETE');
-    });
+      document.getElementById('btn-bookmark') && document.getElementById('btn-bookmark').addEventListener('click', function () {
+        callBookmark(this.dataset.itemId, 'POST');
+      });
+      document.getElementById('btn-unbookmark') && document.getElementById('btn-unbookmark').addEventListener('click', function () {
+        callBookmark(this.dataset.itemId, 'DELETE');
+      });
+    })();
   </script>
 </body>
 </html>

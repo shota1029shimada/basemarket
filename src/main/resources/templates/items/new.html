@@ -1,58 +1,73 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>商品出品</title>
-    <link rel="stylesheet" th:href="@{/css/layout.css}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="_csrf" th:content="${_csrf?.token}" content="">
+  <meta name="_csrf_header" th:content="${_csrf?.headerName}" content="X-CSRF-TOKEN">
+  <title>商品出品</title>
+  <link rel="stylesheet" th:href="@{/css/layout.css}">
 </head>
 <body>
-
-<h1>商品出品</h1>
-
-<form th:action="@{/items}" method="post">
-
-    <div>
-        <label>商品名</label><br>
-        <input type="text" name="title" required>
+  <header class="site-header">
+    <div class="header-inner">
+      <a th:href="@{/items}" class="logo">BaseMarket</a>
+      <nav class="nav-links">
+        <a th:href="@{/items}">商品一覧</a>
+        <a th:href="@{/items/new}">出品する</a>
+        <a th:href="@{/bookmarks}">ブックマーク</a>
+        <a th:href="@{/login}">ログイン</a>
+        <a th:href="@{/register}">新規登録</a>
+        <form th:action="@{/auth/logout}" method="post" class="logout-form">
+          <button type="submit" class="btn-link">ログアウト</button>
+        </form>
+      </nav>
     </div>
+  </header>
 
-    <div>
-        <label>商品説明</label><br>
-        <textarea name="description" rows="5" required></textarea>
-    </div>
+  <main class="main-wrap">
+    <h1 class="page-title">商品出品</h1>
 
-    <div>
-        <label>価格（円）</label><br>
-        <input type="number" name="price" required>
-    </div>
+    <ul th:if="${errors}" class="error-list">
+      <li th:each="err : ${errors}" th:text="${err}">エラー</li>
+    </ul>
 
-    <div>
-        <label>カテゴリ</label><br>
-        <select name="categoryId">
-            <!-- 仮：カテゴリは後で動的化 -->
-            <option value="1">バット</option>
-            <option value="2">グローブ</option>
-            <option value="3">スパイク</option>
-        </select>
-    </div>
-
-    <div>
-        <label>商品状態</label><br>
-        <select name="condition">
+    <div class="card" style="max-width: 560px; padding: 24px;">
+      <form th:action="@{/items}" method="post" th:object="${itemsCreateRequest}">
+        <div class="form-group">
+          <label for="title">商品名</label>
+          <input type="text" id="title" name="title" th:field="*{title}" required>
+        </div>
+        <div class="form-group">
+          <label for="description">商品説明</label>
+          <textarea id="description" name="description" rows="5" th:field="*{description}" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="price">価格（円）</label>
+          <input type="number" id="price" name="price" th:field="*{price}" min="0" required>
+        </div>
+        <div class="form-group">
+          <label for="categoryId">カテゴリ</label>
+          <select id="categoryId" name="categoryId" th:field="*{categoryId}" required>
+            <option value="">選択してください</option>
+            <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.categoryName}">カテゴリ</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="condition">商品状態</label>
+          <select id="condition" name="condition" th:field="*{condition}" required>
             <option value="NEW">新品</option>
             <option value="USED">中古</option>
-        </select>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">出品する</button>
+          <a th:href="@{/items}" class="btn btn-secondary">一覧に戻る</a>
+        </div>
+      </form>
     </div>
+  </main>
 
-    <br>
-
-    <button type="submit">出品する</button>
-
-</form>
-
-<hr>
-
-<a th:href="@{/items}">一覧に戻る</a>
-
+  <footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>

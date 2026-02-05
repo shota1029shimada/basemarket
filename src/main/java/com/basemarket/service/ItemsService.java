@@ -14,6 +14,7 @@ import com.basemarket.entity.Items;
 import com.basemarket.entity.Users;
 import com.basemarket.exception.ResourceNotFoundException;
 import com.basemarket.exception.UnauthorizedException;
+import com.basemarket.repository.BookmarksRepository;
 import com.basemarket.repository.CategoriesRepository;
 import com.basemarket.repository.ItemsRepository;
 import com.basemarket.repository.UsersRepository;
@@ -33,6 +34,7 @@ public class ItemsService {
 	private final CategoriesRepository categoriesRepository;
 	private final SecurityUtil securityUtil;
 	private final UsersRepository usersRepository;
+	private final BookmarksRepository bookmarksRepository;
 
 	// 商品一覧（新着順）
 	public List<ItemResponse> getLatestItems() {
@@ -76,17 +78,27 @@ public class ItemsService {
 		// ※ @Transactional により save() しなくても更新される
 		item.setViewsCount(item.getViewsCount() + 1);
 
-		return new ItemResponse(item);
+		ItemResponse response = new ItemResponse(item);
+
+		// ブックマーク状態を判定（ログインしている場合のみ）
+		try {
+			Users loginUser = securityUtil.getLoginUser();
+			boolean isBookmarked = bookmarksRepository.existsByUserAndItem(loginUser, item);
+			response.setBookmarked(isBookmarked);
+		} catch (Exception e) {
+			// 未ログインまたはエラーの場合はisBookmarkedはnullのまま
+			// （null = 未ログインまたは未判定）
+		}
+
+		return response;
 	}
 
 	// 商品出品
-	// 商品出品（B案：認証なし）
 	public ItemResponse createItem(ItemsCreateRequest request) {
 
-		// B案：Securityは無視。DBに存在するユーザーを仮の出品者として使う
-		Users seller = usersRepository.findAll().stream()
-				.findFirst()
-				.orElseThrow(() -> new ResourceNotFoundException("ユーザーが存在しません（usersテーブルが空です）"));
+		// ログインユーザーを出品者として扱う
+		// （ログインしていない場合は例外）
+		Users seller = securityUtil.getLoginUser();
 
 		// カテゴリ存在チェック
 		Categories category = categoriesRepository.findById(request.getCategoryId())
@@ -133,6 +145,9 @@ public class ItemsService {
 		item.setPrice(request.getPrice());
 		item.setCondition(request.getCondition());
 		item.setCategory(category);
+
+		// DB保存（明示的にsave）
+		itemsRepository.save(item);
 
 		return new ItemResponse(item);
 	}

@@ -1,66 +1,69 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>商品編集</title>
-    <link rel="stylesheet" th:href="@{/css/layout.css}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="_csrf" th:content="${_csrf?.token}" content="">
+  <meta name="_csrf_header" th:content="${_csrf?.headerName}" content="X-CSRF-TOKEN">
+  <title>商品編集</title>
+  <link rel="stylesheet" th:href="@{/css/layout.css}">
 </head>
 <body>
-
-<h1>商品編集</h1>
-
-<form th:action="@{/items/{id}(id=${item.id})}" method="post">
-    <!-- PUT対応 -->
-    <input type="hidden" name="_method" value="put">
-
-    <div>
-        <label>商品名</label><br>
-        <input type="text" name="title"
-               th:value="${item.title}" required>
+  <header class="site-header">
+    <div class="header-inner">
+      <a th:href="@{/items}" class="logo">BaseMarket</a>
+      <nav class="nav-links">
+        <a th:href="@{/items}">商品一覧</a>
+        <a th:href="@{/items/new}">出品する</a>
+        <a th:href="@{/bookmarks}">ブックマーク</a>
+        <a th:href="@{/login}">ログイン</a>
+        <a th:href="@{/register}">新規登録</a>
+        <form th:action="@{/auth/logout}" method="post" class="logout-form">
+          <button type="submit" class="btn-link">ログアウト</button>
+        </form>
+      </nav>
     </div>
+  </header>
 
-    <div>
-        <label>商品説明</label><br>
-        <textarea name="description" rows="5" required
-                  th:text="${item.description}"></textarea>
+  <main class="main-wrap">
+    <h1 class="page-title">商品編集</h1>
+
+    <div class="card" style="max-width: 560px; padding: 24px;">
+      <form th:action="@{/items/{id}(id=${item.id})}" method="post">
+        <input type="hidden" name="_method" value="put">
+        <div class="form-group">
+          <label for="title">商品名</label>
+          <input type="text" id="title" name="title" th:value="${item.title}" required>
+        </div>
+        <div class="form-group">
+          <label for="description">商品説明</label>
+          <textarea id="description" name="description" rows="5" th:text="${item.description}" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="price">価格（円）</label>
+          <input type="number" id="price" name="price" th:value="${item.price}" min="0" required>
+        </div>
+        <div class="form-group">
+          <label for="categoryId">カテゴリ</label>
+          <select id="categoryId" name="categoryId" required>
+            <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.categoryName}" th:selected="${cat.id == item.categoryId}">カテゴリ</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="condition">商品状態</label>
+          <select id="condition" name="condition" required>
+            <option value="NEW" th:selected="${item.condition == 'NEW'}">新品</option>
+            <option value="USED" th:selected="${item.condition == 'USED'}">中古</option>
+          </select>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">更新する</button>
+          <a th:href="@{/items/{id}(id=${item.id})}" class="btn btn-secondary">詳細に戻る</a>
+        </div>
+      </form>
     </div>
+  </main>
 
-    <div>
-        <label>価格（円）</label><br>
-        <input type="number" name="price"
-               th:value="${item.price}" required>
-    </div>
-
-    <div>
-        <label>カテゴリ</label><br>
-        <select name="categoryId">
-            <option value="1"
-                th:selected="${item.categoryId == 1}">バット</option>
-            <option value="2"
-                th:selected="${item.categoryId == 2}">グローブ</option>
-            <option value="3"
-                th:selected="${item.categoryId == 3}">スパイク</option>
-        </select>
-    </div>
-
-    <div>
-        <label>商品状態</label><br>
-        <select name="condition">
-            <option value="NEW"
-                th:selected="${item.condition == 'NEW'}">新品</option>
-            <option value="USED"
-                th:selected="${item.condition == 'USED'}">中古</option>
-        </select>
-    </div>
-
-    <br>
-
-    <button type="submit">更新する</button>
-</form>
-
-<hr>
-
-<a th:href="@{/items/{id}(id=${item.id})}">詳細に戻る</a>
-
+  <footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>

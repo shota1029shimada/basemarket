@@ -8,11 +8,14 @@ import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 
 import com.basemarket.dto.request.ItemsCreateRequest;
+import com.basemarket.dto.request.ItemsUpdateRequest;
 import com.basemarket.dto.response.ItemResponse;
 import com.basemarket.repository.CategoriesRepository;
 import com.basemarket.service.ItemsService;
@@ -105,6 +108,13 @@ public class ItemsPageController {
 		return "items/delete";
 	}
 
+	// 商品削除処理（画面からの削除）
+	@DeleteMapping("/items/{id}")
+	public String delete(@PathVariable Long id) {
+		itemsService.deleteItem(id);
+		return "redirect:/items";
+	}
+
 	// 商品詳細
 	@GetMapping("/items/{id:\\d+}")
 	// ✅ 正規表現付き PathVariable
@@ -116,5 +126,34 @@ public class ItemsPageController {
 		model.addAttribute("item", itemsService.getItemById(id));
 		// templates/items/detail.html
 		return "items/detail";
+	}
+
+	// 編集画面の表示
+	@GetMapping("/items/{id}/edit")
+	public String editForm(@PathVariable Long id, Model model) {
+		model.addAttribute("item", itemsService.getItemById(id));
+		model.addAttribute("categories", categoriesRepository.findAll());
+		return "items/edit";
+	}
+
+	// 商品更新（フォーム POST + _method=put → PutMapping）
+	@PutMapping("/items/{id}")
+	public String update(
+			@PathVariable Long id,
+			@Valid ItemsUpdateRequest request,
+			BindingResult bindingResult,
+			Model model) {
+
+		if (bindingResult.hasErrors()) {
+			// エラー時は既存の商品情報とリクエストを渡す
+			model.addAttribute("item", itemsService.getItemById(id));
+			model.addAttribute("itemsUpdateRequest", request);
+			model.addAttribute("categories", categoriesRepository.findAll());
+			model.addAttribute("errors", bindingResult.getAllErrors().stream()
+					.map(error -> error.getDefaultMessage()).toList());
+			return "items/edit";
+		}
+		itemsService.updateItem(id, request);
+		return "redirect:/items/" + id;
 	}
 }

@@ -34,23 +34,23 @@ public class Users {
 
 	@Id // ← 主キー
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "users_id")
+	@Column(name = "id")
 	// ↑ DB側でIDを自動採番（PostgreSQLのserial相当）
 	private Long id;
 
-	@Column(nullable = false) // NOT NULL制約
+	@Column(name = "name", nullable = false) // NOT NULL制約 DBカラム名は name
 	private String username;
 
 	@Column(nullable = false, unique = true) //unique=true：メールアドレス重複不可
 	private String email;
 
-	@Column(nullable = false) // パスワード（※後で必ずハッシュ化）
+	@Column(name = "password", nullable = false) // パスワード（※後で必ずハッシュ化）DBカラム名は password
 	private String passwordHash;
 
 	@Column(nullable = false) // ROLE_USER / ROLE_ADMIN など
 	private String role;
 
-	@Column(nullable = false)
+	@Column(name = "banned", nullable = false)
 	private boolean isBanned = false;
 
 	@Column(name = "created_at") // 登録日時

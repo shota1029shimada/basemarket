@@ -11,6 +11,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class AuthPageController {
 
 	/**
+	 * ルートパス（/）アクセス時は商品一覧へリダイレクト
+	 * GET /
+	 */
+	@GetMapping("/")
+	public String root() {
+		return "redirect:/items";
+	}
+
+	/**
 	 * ログイン画面表示
 	 * GET /login
 	 */

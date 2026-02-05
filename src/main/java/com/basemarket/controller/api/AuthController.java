@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -52,7 +53,13 @@ public class AuthController {
 				request.getEmail(),
 				request.getPassword());
 
-		Authentication authentication = authenticationManager.authenticate(authToken);
+		final Authentication authentication;
+		try {
+			authentication = authenticationManager.authenticate(authToken);
+		} catch (AuthenticationException ex) {
+			// 画面ログインは 403 ではなくログイン画面へ戻す
+			return "redirect:/login?error";
+		}
 
 		SecurityContextHolder.getContext()
 				.setAuthentication(authentication);
@@ -67,7 +74,8 @@ public class AuthController {
 
 		response.addCookie(cookie);
 
-		return "redirect:/items"; // UC-A02
+		// ログイン成功後は必ず商品一覧画面へリダイレクト
+		return "redirect:/items";
 	}
 
 	/**

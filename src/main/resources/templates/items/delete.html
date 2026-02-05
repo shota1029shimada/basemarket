@@ -1,53 +1,47 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>商品削除確認</title>
-    <link rel="stylesheet" th:href="@{/css/layout.css}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="_csrf" th:content="${_csrf?.token}" content="">
+  <meta name="_csrf_header" th:content="${_csrf?.headerName}" content="X-CSRF-TOKEN">
+  <title>削除確認</title>
+  <link rel="stylesheet" th:href="@{/css/layout.css}">
 </head>
 <body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a th:href="@{/items}" class="logo">BaseMarket</a>
+      <nav class="nav-links">
+        <a th:href="@{/items}">商品一覧</a>
+        <a th:href="@{/items/new}">出品する</a>
+        <a th:href="@{/bookmarks}">ブックマーク</a>
+        <a th:href="@{/login}">ログイン</a>
+        <a th:href="@{/register}">新規登録</a>
+        <form th:action="@{/auth/logout}" method="post" class="logout-form">
+          <button type="submit" class="btn-link">ログアウト</button>
+        </form>
+      </nav>
+    </div>
+  </header>
 
-<h1>商品削除の確認</h1>
+  <main class="main-wrap">
+    <h1 class="page-title">商品削除の確認</h1>
+    <p>以下の商品を削除してもよろしいですか？</p>
 
-<p>以下の商品を削除してもよろしいですか？</p>
+    <div class="detail-card">
+      <p><strong>商品名：</strong><span th:text="${item.title}">商品名</span></p>
+      <p><strong>価格：</strong><span th:text="|${item.price}円|">0円</span></p>
+      <p><strong>カテゴリ：</strong><span th:text="${item.categoryName}">カテゴリ</span></p>
+    </div>
 
-<hr>
+    <form th:action="@{/items/{id}(id=${item.id})}" method="post" class="mb-2">
+      <input type="hidden" name="_method" value="DELETE">
+      <button type="submit" class="btn btn-danger">削除する</button>
+    </form>
+    <a th:href="@{/items/{id}(id=${item.id})}" class="btn btn-secondary">キャンセル（商品詳細へ戻る）</a>
+  </main>
 
-<div>
-    <p>
-        <strong>商品名：</strong>
-        <span th:text="${item.title}">商品名</span>
-    </p>
-
-    <p>
-        <strong>価格：</strong>
-        <span th:text="${item.price}">0</span> 円
-    </p>
-
-    <p>
-        <strong>カテゴリ：</strong>
-        <span th:text="${item.categoryName}">カテゴリ</span>
-    </p>
-</div>
-
-<hr>
-
-<!-- 削除実行 -->
-<form th:action="@{/api/items/{id}(id=${item.id})}"
-      method="post">
-
-    <!-- DELETE 疑似対応 -->
-    <input type="hidden" name="_method" value="DELETE"/>
-
-    <button type="submit">削除する</button>
-</form>
-
-<br>
-
-<!-- キャンセル -->
-<a th:href="@{/items/{id}(id=${item.id})}">
-    キャンセル（商品詳細へ戻る）
-</a>
-
+  <footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>

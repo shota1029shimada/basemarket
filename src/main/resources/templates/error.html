@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>エラー</title>
+  <link rel="stylesheet" th:href="@{/css/layout.css}">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a th:href="@{/items}" class="logo">BaseMarket</a>
+      <nav class="nav-links">
+        <a th:href="@{/items}">商品一覧</a>
+        <a th:href="@{/login}">ログイン</a>
+      </nav>
+    </div>
+  </header>
+  <main class="main-wrap">
+    <h1 class="page-title">エラーが発生しました</h1>
+    <p class="text-muted">HTTP <span th:text="${status}">500</span></p>
+    <p th:if="${message}" th:text="${message}">メッセージ</p>
+    <p><a th:href="@{/items}" class="btn btn-primary">商品一覧へ戻る</a></p>
+  </main>
+</body>
+</html>

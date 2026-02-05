@@ -32,7 +32,8 @@ public class AuthService {
 				.email(request.getEmail())
 				// パスワードは必ずハッシュ化
 				.passwordHash(passwordEncoder.encode(request.getPassword()))
-				.role("ROLE_USER")
+				// データベースの制約に合わせて "USER" を保存（CustomUserDetailsServiceで "ROLE_" プレフィックスを追加）
+				.role("USER")
 				.isBanned(false)
 				.build();
 

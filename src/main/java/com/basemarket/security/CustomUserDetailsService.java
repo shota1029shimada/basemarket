@@ -45,7 +45,12 @@ public class CustomUserDetailsService implements UserDetailsService {
 
 		//ユーザーの権限を作成
 		// Spring Securityでは「ROLE_XXX」という形式が必須
-		List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole()));
+		// DBに既に "ROLE_USER" 形式で保存されている場合はそのまま使用
+		String role = user.getRole();
+		if (!role.startsWith("ROLE_")) {
+			role = "ROLE_" + role;
+		}
+		List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority(role));
 
 		//Spring Securityが使うUserDetailsを生成して返却
 		return new User(

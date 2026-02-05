@@ -15,7 +15,9 @@ import com.basemarket.repository.ItemsRepository;
 import com.basemarket.security.SecurityUtil;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -47,21 +49,43 @@ public class BookmarksService {
 	 */
 	public void addBookmark(Long itemId) {
 		Users loginUser = securityUtil.getLoginUser();
+		
+		// デバッグログ：ログインユーザーの確認
+		if (loginUser == null) {
+			log.error("[BookmarksService] loginUser is null!");
+			throw new ResourceNotFoundException("ログインユーザーが取得できません");
+		}
+		log.debug("[BookmarksService] addBookmark - loginUser.id={}, loginUser.email={}", 
+				loginUser.getId(), loginUser.getEmail());
 
 		Items item = itemsRepository.findById(itemId)
 				.orElseThrow(() -> new ResourceNotFoundException("商品が存在しません"));
+		
+		// デバッグログ：商品の確認
+		if (item == null) {
+			log.error("[BookmarksService] item is null! itemId={}", itemId);
+			throw new ResourceNotFoundException("商品が存在しません");
+		}
+		log.debug("[BookmarksService] addBookmark - item.id={}, item.title={}", 
+				item.getId(), item.getTitle());
 
 		// 既に登録済みなら何もしない（冪等成功）
 		if (bookmarksRepository.existsByUserAndItem(loginUser, item)) {
+			log.debug("[BookmarksService] Bookmark already exists for user.id={}, item.id={}", 
+					loginUser.getId(), item.getId());
 			return;
 		}
 
-		Bookmarks bookmark = Bookmarks.builder()
-				.user(loginUser)
-				.item(item)
-				.build();
+		// Builderではなく直接インスタンス化して確実に設定
+		Bookmarks bookmark = new Bookmarks();
+		bookmark.setUser(loginUser);
+		bookmark.setItem(item);
+		// createdAtは@PrePersistで自動設定される
 
+		log.debug("[BookmarksService] Saving bookmark - user.id={}, item.id={}", 
+				loginUser.getId(), item.getId());
 		bookmarksRepository.save(bookmark);
+		log.debug("[BookmarksService] Bookmark saved successfully");
 	}
 
 	/**

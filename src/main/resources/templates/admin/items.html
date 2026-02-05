@@ -1,10 +1,37 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta charset="UTF-8">
-<title>Insert title here</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>管理 - 商品</title>
+  <link rel="stylesheet" th:href="@{/css/layout.css}">
 </head>
 <body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a th:href="@{/items}" class="logo">BaseMarket</a>
+      <nav class="nav-links">
+        <a th:href="@{/items}">商品一覧</a>
+        <a th:href="@{/items/new}">出品する</a>
+        <a th:href="@{/bookmarks}">ブックマーク</a>
+        <a th:href="@{/login}">ログイン</a>
+        <a th:href="@{/register}">新規登録</a>
+        <form th:action="@{/auth/logout}" method="post" class="logout-form">
+          <button type="submit" class="btn-link">ログアウト</button>
+        </form>
+      </nav>
+    </div>
+  </header>
 
+  <main class="main-wrap">
+    <h1 class="page-title">管理画面 - 商品</h1>
+    <p class="text-muted">商品の一覧・編集・削除（管理者用）</p>
+    <div class="empty-state card">
+      <p>管理機能は準備中です。</p>
+      <a th:href="@{/items}" class="btn btn-secondary">商品一覧に戻る</a>
+    </div>
+  </main>
+
+  <footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
 </html>

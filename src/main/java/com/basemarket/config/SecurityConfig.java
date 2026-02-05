@@ -3,13 +3,16 @@ package com.basemarket.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.basemarket.security.JwtAuthenticationFilter;
 
@@ -36,12 +39,39 @@ public class SecurityConfig {
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
 		http
-				// B案：とにかく CRUD 完成を優先するため、セキュリティ機能を一旦停止
+				// CSRF無効化（JWT認証を使用するため）
 				.csrf(csrf -> csrf.disable())
+				// セッション管理を無状態に（JWT認証のため）
+				.sessionManagement(session -> session
+						.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+				// 認可設定
 				.authorizeHttpRequests(auth -> auth
-						.anyRequest().permitAll());
+						// 公開エンドポイント（認証不要）
+						.requestMatchers("/", "/items", "/login", "/register",
+								"/css/**", "/js/**", "/images/**", "/error").permitAll()
+						// 認証（画面フォーム送信）は公開
+						.requestMatchers(HttpMethod.POST, "/auth/login", "/auth/register").permitAll()
+						// 画面：出品・編集・削除確認画面はログイン必須（より具体的なパスを先に定義）
+						.requestMatchers("/items/new").authenticated()
+						.requestMatchers("/items/*/edit").authenticated()
+						.requestMatchers("/items/*/delete").authenticated()
+						.requestMatchers(HttpMethod.POST, "/items").authenticated()
+						.requestMatchers(HttpMethod.PUT, "/items/*").authenticated()
+						.requestMatchers(HttpMethod.DELETE, "/items/*").authenticated()
+						// 商品詳細は公開（数字のみのパス）
+						.requestMatchers("/items/{id:\\d+}").permitAll()
+						// API：参照(GET)のみ公開、それ以外は認証必須
+						.requestMatchers(HttpMethod.GET, "/api/items", "/api/items/**").permitAll()
+						.requestMatchers(HttpMethod.POST, "/api/items", "/api/items/**").authenticated()
+						.requestMatchers(HttpMethod.PUT, "/api/items/*").authenticated()
+						.requestMatchers(HttpMethod.DELETE, "/api/items/*").authenticated()
+						// 認証が必要なAPIエンドポイント
+						.requestMatchers("/api/bookmarks/**", "/api/likes/**", "/api/users/**").authenticated()
+						// その他は認証必須
+						.anyRequest().authenticated())
+				// JWTフィルターをUsernamePasswordAuthenticationFilterの前に追加
+				.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
-		// B案：JWTフィルタ・entryPoint なども一旦使わない（CRUD完成後に戻す）
 		return http.build();
 	}
 
